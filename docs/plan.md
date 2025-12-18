@@ -6,14 +6,15 @@
 
 ---
 
-## Progress Checkpoint (2025-12-18)
+## Progress Checkpoint (2025-12-19)
 
 - Phase 1 scaffolding completed: `pyproject.toml`, package layout, `.python-version`, `.gitignore` updated.
 - Core modules implemented: `shared/consts.py`, `core/exceptions.py`, `core/protocols.py`, `core/config.py`,
   `core/logging.py`, `core/__init__.py`, `shared/__init__.py`, `shared/utils/__init__.py`.
 - CLI entrypoints added: `main.py`, `cli.py` with version and config_show commands plus logging bootstrap.
 - Tests added and passing: constants, exceptions, logging level, settings defaults and YAML override.
-- Next up: Phase 2 Agent Layer (models, base agent, claude/codex wrappers, factory) with subprocess mocks and tests.
+- Phase 2 Agent Layer DONE: models, base agent, Claude/Codex wrappers, factory, and tests (17/17 passing).
+- Next up: Phase 3 State & Git (state models/manager, git models/manager + tests).
 
 ---
 
