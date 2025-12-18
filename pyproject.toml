@@ -1,0 +1,31 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "bmad-auto"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+  "typer>=0.15.0",
+  "rich>=13.9.0",
+  "textual>=1.0.0",
+  "pydantic>=2.10.0",
+  "pydantic-settings>=2.6.0",
+  "gitpython>=3.1.0",
+  "tenacity>=9.0.0",
+  "structlog>=24.4.0",
+  "pyyaml>=6.0",
+]
+
+[project.scripts]
+bmad-auto = "bmad_auto.main:main"
+
+[dependency-groups]
+dev = [
+  "pytest>=8.3.0",
+  "pytest-cov>=6.0.0",
+  "pytest-asyncio>=0.24.0",
+  "ruff>=0.8.0",
+  "pyright>=1.1.390",
+]
