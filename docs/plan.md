@@ -6,6 +6,17 @@
 
 ---
 
+## Progress Checkpoint (2025-12-18)
+
+- Phase 1 scaffolding completed: `pyproject.toml`, package layout, `.python-version`, `.gitignore` updated.
+- Core modules implemented: `shared/consts.py`, `core/exceptions.py`, `core/protocols.py`, `core/config.py`,
+  `core/logging.py`, `core/__init__.py`, `shared/__init__.py`, `shared/utils/__init__.py`.
+- CLI entrypoints added: `main.py`, `cli.py` with version and config_show commands plus logging bootstrap.
+- Tests added and passing: constants, exceptions, logging level, settings defaults and YAML override.
+- Next up: Phase 2 Agent Layer (models, base agent, claude/codex wrappers, factory) with subprocess mocks and tests.
+
+---
+
 ## Overview
 
 Build a uvx-installable CLI tool that automates the BMAD (Breakthrough Method for Agile AI-Driven Development) methodology by orchestrating Claude Code and Codex CLI tools.
