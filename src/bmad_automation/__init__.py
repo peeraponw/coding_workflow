@@ -1,0 +1,1 @@
+"""BMAD Implementation Automation."""
