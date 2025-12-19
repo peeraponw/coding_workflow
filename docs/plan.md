@@ -15,7 +15,7 @@
 - Tests added and passing: constants, exceptions, logging level, settings defaults and YAML override.
 - Phase 2 Agent Layer DONE: models, base agent, Claude/Codex wrappers, factory, and tests (17/17 passing).
 - Phase 3 State & Git DONE: state models/manager, git models/manager implemented with tests (9/9 passing).
-- Next up: Phase 4 Discovery (models, epic/story parsers + tests).
+- Phase 4 Discovery in progress: epic/story models and parsers added with initial tests (4/4 passing). Remaining: epic discovery helper (pattern search) and integration with orchestrator.
 
 ---
 
