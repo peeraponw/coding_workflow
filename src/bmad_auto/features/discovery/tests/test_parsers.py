@@ -72,4 +72,3 @@ def test_story_parser_requires_id_and_title(tmp_path: Path) -> None:
     story_file.write_text(story_md)
     with pytest.raises(StoryCreationError):
         StoryParser().parse(story_file)
-
