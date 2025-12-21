@@ -6,6 +6,14 @@
 
 ---
 
+## Progress Checkpoint (2025-12-21)
+
+- Orchestrator expanded: add-context, retrospective, documentation, and create-PR phases implemented with optional templates.
+- Fixed branch/commit prefixing to avoid double-prefixing in the workflow engine.
+- Story flow now validates after optional context expansion.
+- Added default prompt templates for create_story, add_context, develop, code_review, retrospective, documentation, and create_pr.
+- Remaining: expand CLI commands, TUI, templates, README, CI.
+
 ## Progress Checkpoint (2025-12-20)
 
 - Phase 6 Orchestrator started: added phases enum, prompt loader, and workflow engine with story runner.

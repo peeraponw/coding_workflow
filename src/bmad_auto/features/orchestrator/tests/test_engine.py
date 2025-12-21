@@ -35,15 +35,17 @@ class FakeAgent:
 
 
 class FakeGitManager:
-    def __init__(self) -> None:
+    def __init__(self, branch_prefix: str = "bmad", commit_prefix: str = "feat(bmad):") -> None:
         self.created_branch: str | None = None
         self.commits: list[str] = []
+        self._branch_prefix = branch_prefix
+        self._commit_prefix = commit_prefix
 
     def create_branch(self, name: str) -> None:
-        self.created_branch = name
+        self.created_branch = f"{self._branch_prefix}/{name}" if self._branch_prefix else name
 
     def commit(self, message: str) -> None:
-        self.commits.append(message)
+        self.commits.append(f"{self._commit_prefix} {message}")
 
     def push_and_create_pr(self, title: str, body: str) -> str:
         return "https://example.test/pr/1"
@@ -82,7 +84,7 @@ async def test_engine_runs_story_success(tmp_path: Path) -> None:
     epic_path = _write_epic(tmp_path)
     prompt_loader = _write_templates(tmp_path)
     state_manager = StateManager(state_dir=tmp_path / ".bmad-auto" / "state")
-    git_manager = FakeGitManager()
+    git_manager = FakeGitManager(branch_prefix="bmad", commit_prefix="feat(bmad):")
     settings = Settings(
         discovery={"story_output_dir": "docs/stories"},
         workflow={"max_dev_attempts": 2},
@@ -118,7 +120,7 @@ async def test_engine_fails_after_rejections(tmp_path: Path) -> None:
     epic_path = _write_epic(tmp_path)
     prompt_loader = _write_templates(tmp_path)
     state_manager = StateManager(state_dir=tmp_path / ".bmad-auto" / "state")
-    git_manager = FakeGitManager()
+    git_manager = FakeGitManager(branch_prefix="bmad", commit_prefix="feat(bmad):")
     settings = Settings(
         discovery={"story_output_dir": "docs/stories"},
         workflow={"max_dev_attempts": 2},

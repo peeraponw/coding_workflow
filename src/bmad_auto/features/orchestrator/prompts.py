@@ -24,6 +24,10 @@ class PromptLoader:
         except KeyError as exc:
             raise ConfigurationError(f"Missing prompt context key: {exc}") from exc
 
+    def has_template(self, phase: Phase) -> bool:
+        """Return True when the template file for the phase exists."""
+        return self._template_path(phase).is_file()
+
     def _load_template(self, phase: Phase) -> str:
         path = self._template_path(phase)
         if not path.is_file():

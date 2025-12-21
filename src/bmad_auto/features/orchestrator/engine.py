@@ -30,6 +30,7 @@ from bmad_auto.shared.consts import (
     ROLE_DEVELOPER,
     ROLE_REVIEWER,
     ROLE_SCRUM_MASTER,
+    ROLE_TECH_WRITER,
     STORY_ID_PATTERN,
 )
 
@@ -87,6 +88,9 @@ class WorkflowEngine:
         try:
             for story_ref in epic.story_refs:
                 await runner.run_story(epic, state, story_ref)
+            await run_retrospective(deps, epic, state)
+            await run_documentation(deps, epic, state)
+            await maybe_create_pr(deps, epic, state)
             state.status = "completed"
             self._state_manager.save(state)
             self._reporter.on_complete(True)
@@ -111,9 +115,9 @@ class WorkflowEngine:
 
     def _create_branch(self, state: WorkflowState, epic: EpicInfo) -> None:
         branch_prefix = self._settings.git.branch_prefix
-        branch_name = f"{branch_prefix}/{epic.id}"
+        branch_name = f"{branch_prefix}/{epic.id}" if branch_prefix else epic.id
         self._set_phase(state, Phase.CREATE_BRANCH, None)
-        self._git_manager.create_branch(branch_name)
+        self._git_manager.create_branch(epic.id)
         state.branch_name = branch_name
         state.branch_created = True
         self._state_manager.save(state)
@@ -146,6 +150,8 @@ class StoryRunner:
         story_id, story_title = parse_story_ref(story_ref)
         story_path = story_path_for(self._deps, story_id)
         await create_story(self._deps, epic, state, story_id, story_title, story_path)
+        validate_story(self._deps, state, story_id, story_path)
+        await add_context(self._deps, epic, state, story_id, story_title, story_path)
         validate_story(self._deps, state, story_id, story_path)
         await develop_and_review(self._deps, epic, state, story_id, story_title, story_path)
         commit_story(self._deps, state, story_id, story_title)
@@ -278,8 +284,7 @@ def commit_story(
     story_title: str,
 ) -> None:
     set_phase(deps, state, Phase.COMMIT, story_id)
-    prefix = deps.settings.git.commit_prefix
-    message = f"{prefix} {story_id} {story_title}"
+    message = f"{story_id} {story_title}"
     deps.git_manager.commit(message)
 
 
@@ -306,6 +311,91 @@ def review_passed(output: str) -> bool:
     if MARKER_REVIEW_REJECTED in output:
         return False
     raise WorkflowError("Review output missing approval/rejection marker")
+
+
+async def add_context(
+    deps: StoryDeps,
+    epic: EpicInfo,
+    state: WorkflowState,
+    story_id: str,
+    story_title: str,
+    story_path: Path,
+) -> None:
+    if not deps.prompt_loader.has_template(Phase.ADD_CONTEXT):
+        return
+    set_phase(deps, state, Phase.ADD_CONTEXT, story_id)
+    story_markdown = story_path.read_text(encoding="utf-8")
+    context = {
+        "epic_id": epic.id,
+        "epic_title": epic.title,
+        "epic_description": epic.description,
+        "story_id": story_id,
+        "story_title": story_title,
+        "story_path": str(story_path),
+        "story_markdown": story_markdown,
+    }
+    prompt = deps.prompt_loader.render(Phase.ADD_CONTEXT, context)
+    result = await run_agent(deps, ROLE_SCRUM_MASTER, prompt)
+    if not result.output.strip():
+        raise StoryCreationError("Add context returned empty output")
+    story_path.write_text(result.output, encoding="utf-8")
+
+
+async def run_retrospective(deps: StoryDeps, epic: EpicInfo, state: WorkflowState) -> None:
+    if not deps.prompt_loader.has_template(Phase.RETROSPECTIVE):
+        return
+    set_phase(deps, state, Phase.RETROSPECTIVE, None)
+    context = {
+        "epic_id": epic.id,
+        "epic_title": epic.title,
+        "epic_description": epic.description,
+        "completed_stories": ", ".join(state.completed_stories),
+        "failed_stories": ", ".join(state.failed_stories),
+    }
+    prompt = deps.prompt_loader.render(Phase.RETROSPECTIVE, context)
+    await run_agent(deps, ROLE_SCRUM_MASTER, prompt)
+
+
+async def run_documentation(deps: StoryDeps, epic: EpicInfo, state: WorkflowState) -> None:
+    if not deps.prompt_loader.has_template(Phase.DOCUMENTATION):
+        return
+    set_phase(deps, state, Phase.DOCUMENTATION, None)
+    context = {
+        "epic_id": epic.id,
+        "epic_title": epic.title,
+        "epic_description": epic.description,
+        "completed_stories": ", ".join(state.completed_stories),
+        "failed_stories": ", ".join(state.failed_stories),
+    }
+    prompt = deps.prompt_loader.render(Phase.DOCUMENTATION, context)
+    await run_agent(deps, ROLE_TECH_WRITER, prompt)
+
+
+async def maybe_create_pr(deps: StoryDeps, epic: EpicInfo, state: WorkflowState) -> None:
+    if not (deps.settings.git.auto_push or deps.settings.git.create_pr):
+        return
+    set_phase(deps, state, Phase.CREATE_PR, None)
+    context = {
+        "epic_id": epic.id,
+        "epic_title": epic.title,
+        "epic_description": epic.description,
+        "completed_stories": ", ".join(state.completed_stories),
+        "failed_stories": ", ".join(state.failed_stories),
+        "branch_name": state.branch_name or "",
+    }
+    body = ""
+    if deps.prompt_loader.has_template(Phase.CREATE_PR):
+        prompt = deps.prompt_loader.render(Phase.CREATE_PR, context)
+        result = await run_agent(deps, ROLE_SCRUM_MASTER, prompt)
+        body = result.output.strip()
+    if not body:
+        body = (
+            f"Epic {epic.id}: {epic.title}\n\n"
+            f"Completed: {', '.join(state.completed_stories) or 'None'}\n"
+            f"Failed: {', '.join(state.failed_stories) or 'None'}"
+        )
+    title = f"{epic.id}: {epic.title}"
+    deps.git_manager.push_and_create_pr(title, body)
 
 
 __all__ = ["WorkflowEngine", "NullProgressReporter", "parse_story_ref", "review_passed"]
