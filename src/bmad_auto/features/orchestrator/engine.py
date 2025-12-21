@@ -102,6 +102,48 @@ class WorkflowEngine:
             raise
         return state
 
+    async def resume_workflow(self, workflow_id: str) -> WorkflowState:
+        state = self._state_manager.load(workflow_id)
+        if state is None:
+            raise WorkflowError(f"Workflow not found: {workflow_id}")
+        epic = EpicParser().parse(Path(state.epic_file))
+        state.status = "running"
+        state.error = None
+        self._state_manager.save(state)
+        if not state.branch_created:
+            self._create_branch(state, epic)
+
+        deps = StoryDeps(
+            agents=self._agents,
+            state_manager=self._state_manager,
+            git_manager=self._git_manager,
+            prompt_loader=self._prompt_loader,
+            settings=self._settings,
+            repo_root=self._repo_root,
+            reporter=self._reporter,
+        )
+        runner = StoryRunner(deps)
+        completed = set(state.completed_stories)
+        try:
+            for story_ref in epic.story_refs:
+                story_id, _ = parse_story_ref(story_ref)
+                if story_id in completed:
+                    continue
+                await runner.run_story(epic, state, story_ref)
+            await run_retrospective(deps, epic, state)
+            await run_documentation(deps, epic, state)
+            await maybe_create_pr(deps, epic, state)
+            state.status = "completed"
+            self._state_manager.save(state)
+            self._reporter.on_complete(True)
+        except Exception as exc:
+            state.status = "failed"
+            state.error = str(exc)
+            self._state_manager.save(state)
+            self._reporter.on_complete(False)
+            raise
+        return state
+
     def _init_state(self, epic: EpicInfo) -> WorkflowState:
         workflow_id = f"{epic.id}-{uuid.uuid4().hex[:8]}"
         state = WorkflowState(

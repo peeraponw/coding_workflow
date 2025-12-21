@@ -8,6 +8,13 @@
 
 ## Progress Checkpoint (2025-12-21)
 
+- Implemented resume_workflow in orchestrator with skipping completed stories.
+- Expanded CLI with init/run/resume/status/list_epics/config_validate plus dry-run.
+- Added headless reporter and basic Textual TUI scaffolding.
+- Added resume workflow test coverage.
+
+## Progress Checkpoint (2025-12-21)
+
 - Orchestrator expanded: add-context, retrospective, documentation, and create-PR phases implemented with optional templates.
 - Fixed branch/commit prefixing to avoid double-prefixing in the workflow engine.
 - Story flow now validates after optional context expansion.
