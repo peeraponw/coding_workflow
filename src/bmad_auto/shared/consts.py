@@ -22,3 +22,13 @@ DEFAULT_EPIC_PATTERNS = (
     "docs/epics/**/*.md",
 )
 DEFAULT_STORY_OUTPUT_DIR = "docs/stories"
+
+DEFAULT_TEMPLATES_DIR = "templates"
+TEMPLATE_EXTENSION = ".md"
+
+ROLE_SCRUM_MASTER = "scrum_master"
+ROLE_DEVELOPER = "developer"
+ROLE_REVIEWER = "reviewer"
+ROLE_TECH_WRITER = "tech_writer"
+
+STORY_ID_PATTERN = r"^[A-Za-z0-9_-]+$"

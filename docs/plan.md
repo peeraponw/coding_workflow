@@ -6,6 +6,13 @@
 
 ---
 
+## Progress Checkpoint (2025-12-20)
+
+- Phase 6 Orchestrator started: added phases enum, prompt loader, and workflow engine with story runner.
+- Added orchestrator tests for prompt rendering and engine success/rejection flows.
+- Added shared constants for templates, roles, and story id validation.
+- Remaining: finish orchestrator (context/doc/PR phases), expand CLI commands, TUI, templates, README, CI.
+
 ## Progress Checkpoint (2025-12-18)
 
 - Phase 1 scaffolding completed: `pyproject.toml`, package layout, `.python-version`, `.gitignore` updated.
