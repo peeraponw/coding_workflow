@@ -1,5 +1,7 @@
 ---
-stepsCompleted: [1, 2, 3, 4, 5, 6, 7]
+stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+status: complete
+lastStep: 11
 inputDocuments:
   - "project-planning-artifacts/product-brief-bmad-auto-2025-12-25.md"
   - "project-planning-artifacts/research/technical-claude-codex-cli-integration-research-2025-12-25.md"
@@ -295,4 +297,165 @@ branch_prefix = "epic/"
 - Clear exit codes for CI/CD integration
 - Structured logging for log aggregation
 - `--json` flag for machine-parseable status output (Growth feature)
+
+## Project Scoping & Phased Development
+
+### MVP Strategy & Philosophy
+
+**MVP Approach:** Problem-Solving MVP
+Solve the core problem (manual BMAD orchestration overhead) with minimal features. No platform plays, no revenue features—just "does this actually work for me?"
+
+**Resource Requirements:** Solo developer
+
+### MVP Feature Set (Phase 1)
+
+**Core User Journeys Supported:**
+- The Lunchtime Epic (success path) - full autonomous execution
+- The 3 AM Rate Limit (failure/recovery) - graceful pause and resume
+- The Anxious Check-In (status monitoring) - non-blocking progress visibility
+
+**Must-Have Capabilities:**
+
+| Capability | Rationale |
+|------------|-----------|
+| `run --epic` command | Core value proposition |
+| Story loop orchestration | The entire workflow |
+| Hierarchical model routing | Cost optimization |
+| YAML state persistence | Pause/resume requirement |
+| `status` command | AFK visibility |
+| `resume` command | Recovery from interruption |
+| Headless logging | Workflow transparency |
+| `.bmad-auto.toml` config | Agent model configuration |
+| Auto-branch and auto-commit | Hands-off execution |
+
+**Explicitly Out of MVP:**
+
+| Feature | Reason |
+|---------|--------|
+| TUI dashboard | Headless logging sufficient |
+| Codex CLI support | Simplify integration |
+| `init` command | Manual config acceptable |
+| Auto-PR creation | `gh pr create` works |
+| Shell completion | Convenience, not essential |
+| Worktree parallelism | Over-engineering for MVP |
+
+### Post-MVP Features
+
+**Phase 2 (Growth):**
+- TUI dashboard for real-time progress visualization
+- Codex CLI support for model diversity
+- `bmad-auto init` for guided setup
+- Auto-PR creation with summary
+- Shell completion (bash/zsh/fish)
+- `--json` flag for machine-parseable status output
+
+**Phase 3 (Expansion):**
+- Git worktree parallelism for speculative execution
+- Tech Writer and Retrospective phases
+- Multi-epic parallel processing
+
+**Phase 4 (Vision):**
+- Team collaboration features
+
+### Risk Mitigation Strategy
+
+**Technical Risks:**
+
+| Risk | Mitigation |
+|------|------------|
+| Claude Agent SDK limitations | Research already done; SDK approach validated |
+| Rate limiting during long epics | Graceful pause + resume; user waits and retries |
+| State corruption | YAML format human-readable for manual recovery |
+
+**Market Risks:**
+Not applicable—personal productivity tool.
+
+**Resource Risks:**
+
+| Risk | Mitigation |
+|------|------------|
+| Limited dev time | Tight MVP scope; no scope creep |
+| Burnout | AFK-friendly tool means less manual work |
+
+## Functional Requirements
+
+### Workflow Execution
+
+- FR1: User can execute a story loop for an entire epic with a single command
+- FR2: User can specify the epic file path as a command argument
+- FR3: System can parse BMAD epic files to extract story requirements
+- FR4: System can execute stories sequentially until all are complete or a failure occurs
+
+### Agent Orchestration
+
+- FR5: System can invoke Scrum Master agent to create user stories from epic requirements
+- FR6: System can invoke Developer agent to implement story requirements
+- FR7: System can invoke Reviewer agent to validate implemented code
+- FR8: System can iterate the Dev → Review loop until the Reviewer approves
+- FR9: System can route SM and Reviewer agents to Claude (logged-in subscription)
+- FR10: System can route Developer agent to GLM via ANTHROPIC_BASE_URL
+- FR11: System can pass context between agents via YAML handoff files
+
+### State Management
+
+- FR12: System can persist workflow state to YAML file after each phase completion
+- FR13: User can resume an interrupted workflow from the exact point of interruption
+- FR14: System can detect incomplete workflow state on startup
+- FR15: System can recover gracefully from rate limit errors by pausing and persisting state
+- FR16: System can recover gracefully from API errors by pausing and persisting state
+
+### Progress Monitoring
+
+- FR17: User can check current workflow status without interrupting execution
+- FR18: System can display current agent, action, and phase in progress
+- FR19: System can display completed stories with commit references
+- FR20: System can log workflow progression with timestamps to terminal
+- FR21: System can log handoff events showing source agent, target agent, and reason
+
+### Git Integration
+
+- FR22: System can create a feature branch for the epic automatically
+- FR23: System can commit code after each story passes review
+- FR24: System can include story reference in commit message
+- FR25: User can configure branch naming prefix
+
+### Configuration
+
+- FR26: User can configure agent model assignments in .bmad-auto.toml
+- FR27: System can read GLM credentials from ANTHROPIC_API_KEY environment variable
+- FR28: System can read GLM endpoint from ANTHROPIC_BASE_URL environment variable
+- FR29: User can configure default epic path in config file
+- FR30: User can configure state file location in config file
+- FR31: User can configure git auto-branch and auto-commit behavior
+
+### Error Handling
+
+- FR32: System can report clear error messages indicating failure reason and location
+- FR33: System can exit with distinct exit codes for success, error, paused, and config error states
+- FR34: System can preserve state integrity during unexpected failures
+
+## Non-Functional Requirements
+
+### Reliability
+
+- NFR1: State file must be written atomically to prevent corruption during unexpected termination
+- NFR2: Resume operation must restore exact workflow position 100% of the time when state file is intact
+- NFR3: System must detect and report corrupted state files rather than proceeding with partial data
+- NFR4: Git operations must be atomic—no partial commits that leave repository in inconsistent state
+- NFR5: Agent failures must not corrupt previously completed work (committed stories remain committed)
+
+### Integration
+
+- NFR6: System must work with Claude Agent SDK using logged-in Anthropic subscription
+- NFR7: System must support GLM routing via standard ANTHROPIC_BASE_URL mechanism
+- NFR8: System must parse BMAD epic files in standard markdown format
+- NFR9: System must produce YAML files readable by standard YAML parsers
+- NFR10: System must integrate with git CLI for branch and commit operations
+- NFR11: System must work with standard TOML parsers for configuration
+
+### Security
+
+- NFR12: GLM credentials (ANTHROPIC_API_KEY) must only be read from environment variables, never stored in config files
+- NFR13: State files must not contain API credentials or secrets
+- NFR14: Log output must not expose API credentials or sensitive request/response content
 
