@@ -1,5 +1,6 @@
 ---
-stepsCompleted: [1, 2, 3, 4]
+stepsCompleted: [1, 2, 3, 4, 5, 6]
+status: complete
 inputDocuments:
   - "_bmad-output/project-planning-artifacts/research/technical-claude-codex-cli-integration-research-2025-12-25.md"
   - "docs/description.md"
@@ -173,4 +174,69 @@ Success is measured purely by: **"Does it save me time and work reliably?"**
 
 ---
 
-<!-- Content will be appended sequentially through collaborative workflow steps -->
+## MVP Scope
+
+### Core Features
+
+**CLI Commands:**
+| Command | Purpose |
+|---------|---------|
+| `bmad-auto run --epic <file>` | Execute story loop for an epic |
+| `bmad-auto status` | Check current workflow progress |
+| `bmad-auto resume` | Continue a paused/interrupted workflow |
+
+**Story Loop:**
+```
+Epic File → SM creates story → Dev implements → Reviewer checks
+                    ↑__________________________________|
+                          (iterate until APPROVED)
+                                    ↓
+                            Auto-commit to branch
+```
+
+**Core Capabilities:**
+- Parse BMAD epic files and extract story requirements
+- Invoke Claude Code CLI with role-specific prompts (SM, Dev, Reviewer)
+- Pass context between agents via orchestrator-managed state
+- Persist workflow state to JSON for pause/resume
+- Auto-create feature branch for epic
+- Auto-commit after each approved story
+
+**Integration:**
+- Claude Code CLI only (via Claude Agent SDK)
+- Headless mode (structured logging to terminal)
+
+### Out of Scope for MVP
+
+| Feature | Rationale |
+|---------|-----------|
+| TUI dashboard | Nice-to-have; headless logging sufficient for MVP |
+| Codex CLI support | Simplify integration; add later |
+| `bmad-auto init` command | Manual config file creation acceptable |
+| Auto-create PR | User can run `gh pr create` manually |
+| Tech Writer phase | Focus on core dev loop first |
+| Retrospective phase | Focus on core dev loop first |
+| Multi-epic parallel | Single epic sufficient for MVP |
+
+### MVP Success Criteria
+
+MVP is successful when:
+1. User can run `bmad-auto run --epic <file>` and walk away
+2. Stories complete autonomously (SM → Dev → Review → Commit)
+3. Workflow resumes correctly after interruption
+4. User returns to find committed, reviewed code
+
+### Future Vision
+
+**Post-MVP Enhancements:**
+- TUI dashboard for real-time progress visualization
+- Codex CLI support for model diversity
+- `bmad-auto init` for guided setup
+- Auto-PR creation with summary
+- Tech Writer and Retrospective phases
+- Multi-epic parallel processing
+- Team collaboration features (long-term)
+
+---
+
+*Product Brief completed: 2025-12-25*
