@@ -8,6 +8,11 @@
 
 ## Progress Checkpoint (2025-12-21)
 
+- CLI run now supports `--all` with optional `--repo-path`, including dry-run listing across epics.
+- Added CLI test coverage for `run --all --dry-run`.
+
+## Progress Checkpoint (2025-12-21)
+
 - Implemented resume_workflow in orchestrator with skipping completed stories.
 - Expanded CLI with init/run/resume/status/list_epics/config_validate plus dry-run.
 - Added headless reporter and basic Textual TUI scaffolding.

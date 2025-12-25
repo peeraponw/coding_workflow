@@ -66,16 +66,57 @@ def init(repo_path: Path = typer.Argument(Path("."), help="Repository root path"
 
 @app.command()
 def run(
-    epic: Path = typer.Argument(..., help="Epic markdown file"),
+    epic: Path | None = typer.Argument(None, help="Epic markdown file"),
+    all_epics: bool = typer.Option(False, "--all", "-a", help="Run all unprocessed epics"),
+    repo_path: Path = typer.Option(
+        Path("."),
+        "--repo-path",
+        "-r",
+        help="Repository root path",
+    ),
     tui: bool = typer.Option(False, "--tui", help="Launch Textual UI"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Validate epic and exit"),
 ) -> None:
     """Run an epic workflow."""
-    epic_path = epic.resolve()
+    repo_root = repo_path.resolve()
+    settings = config_module.get_settings()
+    if all_epics and epic is not None:
+        raise typer.BadParameter("Provide either an epic path or --all, not both.")
+    if not all_epics and epic is None:
+        raise typer.BadParameter("Epic file is required unless --all is provided.")
+    if all_epics and tui:
+        raise typer.BadParameter("TUI mode does not support --all.")
+
+    if all_epics:
+        state_dir = repo_root / settings.state_dir
+        state_manager = StateManager(state_dir=state_dir)
+        discovery = EpicDiscovery(patterns=settings.discovery.epic_patterns, repo_root=repo_root)
+        epics = discovery.discover(state_manager.list_all())
+        if not epics:
+            typer.echo("No epics found.")
+            return
+        if dry_run:
+            for epic_path in epics:
+                epic_info = EpicParser().parse(epic_path)
+                typer.echo(f"Epic: {epic_info.title}")
+                for ref in epic_info.story_refs:
+                    story_id, title = parse_story_ref(ref)
+                    typer.echo(f"- {story_id}: {title}")
+            return
+        reporter = HeadlessReporter()
+        engine = _build_engine(settings=settings, repo_root=repo_root, reporter=reporter)
+        for epic_path in epics:
+            asyncio.run(engine.run_epic(epic_path))
+        return
+
+    epic_path = epic
+    if epic_path is None:
+        raise typer.BadParameter("Epic file is required.")
+    epic_path = epic_path if epic_path.is_absolute() else repo_root / epic_path
+    epic_path = epic_path.resolve()
     if not epic_path.is_file():
         raise typer.BadParameter(f"Epic file not found: {epic_path}")
 
-    settings = config_module.get_settings()
     if dry_run:
         epic_info = EpicParser().parse(epic_path)
         typer.echo(f"Epic: {epic_info.title}")
@@ -84,7 +125,6 @@ def run(
             typer.echo(f"- {story_id}: {title}")
         return
 
-    repo_root = Path(".").resolve()
     if tui:
         app_tui = WorkflowApp(engine=None, epic_path=epic_path)
         engine = _build_engine(settings=settings, repo_root=repo_root, reporter=app_tui.reporter)
