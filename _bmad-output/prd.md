@@ -1,5 +1,5 @@
 ---
-stepsCompleted: [1, 2, 3, 4, 5, 6]
+stepsCompleted: [1, 2, 3, 4, 5, 6, 7]
 inputDocuments:
   - "project-planning-artifacts/product-brief-bmad-auto-2025-12-25.md"
   - "project-planning-artifacts/research/technical-claude-codex-cli-integration-research-2025-12-25.md"
@@ -34,7 +34,7 @@ One command. One epic. Reviewed code.
 uvx bmad-auto run --epic docs/epics/epic-001.md
 ```
 
-The orchestrator manages the story loop: Scrum Master creates stories → Developer implements → Reviewer validates → iterate until approved → auto-commit. State persists to JSON for pause/resume capability.
+The orchestrator manages the story loop: Scrum Master creates stories → Developer implements → Reviewer validates → iterate until approved → auto-commit. State persists to YAML for pause/resume capability.
 
 ### What Makes This Special
 
@@ -42,7 +42,7 @@ The orchestrator manages the story loop: Scrum Master creates stories → Develo
 
 2. **AFK-Friendly Execution** - Kick off an epic before lunch, return to committed, reviewed code. No babysitting required.
 
-3. **Seamless Pause/Resume** - JSON state persistence means interruptions don't lose progress. Pick up exactly where you left off.
+3. **Seamless Pause/Resume** - YAML state persistence means interruptions don't lose progress. Pick up exactly where you left off.
 
 4. **Trust Through Review Gates** - Every commit passes the SM → Dev → Review loop. No silent failures, no corrupted code.
 
@@ -78,7 +78,7 @@ Community adoption (GitHub stars, contributors) is not a success metric.
 
 ### Technical Success
 
-1. **State Integrity** - JSON state accurately reflects workflow progress; never corrupted
+1. **State Integrity** - YAML state accurately reflects workflow progress; never corrupted
 2. **Clear Error Reporting** - On failure, user knows exactly where it stopped and why
 3. **Graceful Degradation** - Technical failures (rate limits, API errors) pause and wait for user intervention rather than corrupting state
 4. **Clean Recovery** - User can revert to last working commit if needed
@@ -111,7 +111,7 @@ Community adoption (GitHub stars, contributors) is not a success metric.
 - Story loop: SM creates story → Dev implements → Reviewer validates → iterate → Commit
 - Claude Code only (via Claude Agent SDK)
 - Hierarchical model routing (Claude for SM/Reviewer, GLM for Dev via ANTHROPIC_BASE_URL)
-- JSON state persistence for pause/resume
+- YAML state persistence for pause/resume
 - Auto-create feature branch, auto-commit after approved stories
 - Headless mode with structured logging
 
@@ -151,7 +151,7 @@ Forty-five minutes later, Warm returns with a coffee. He glances at the terminal
 
 Warm kicks off a complex refactoring epic before bed. Six stories, touching core modules. He sets his laptop on the desk and goes to sleep.
 
-At 3 AM, the Claude API hits a rate limit mid-story. The orchestrator detects the failure, persists state to JSON, and logs clearly:
+At 3 AM, the Claude API hits a rate limit mid-story. The orchestrator detects the failure, persists state to YAML, and logs clearly:
 
 ```
 [03:14:22] ERROR: Rate limit exceeded (429)
@@ -199,10 +199,100 @@ Warm exhales. Three-quarters done, review phase, no errors. He goes back to his 
 | Auto-commit to feature branch | Journey 1 |
 | Headless execution with structured logging | Journey 1, 2 |
 | Error detection and graceful pause | Journey 2 |
-| JSON state persistence | Journey 2 |
+| YAML state persistence | Journey 2 |
 | `resume` command with exact state recovery | Journey 2 |
 | Clear error messaging | Journey 2 |
 | `status` command | Journey 3 |
 | Progress reporting (story/phase/iteration) | Journey 3 |
 | Non-blocking status checks | Journey 3 |
+
+## CLI Tool Specific Requirements
+
+### Command Structure
+
+**Core Commands (MVP):**
+
+| Command | Purpose | Example |
+|---------|---------|---------|
+| `bmad-auto run --epic <file>` | Execute story loop for an epic | `bmad-auto run --epic docs/epics/epic-001.md` |
+| `bmad-auto status` | Check current workflow progress | `bmad-auto status` |
+| `bmad-auto resume` | Continue paused/interrupted workflow | `bmad-auto resume` |
+
+**Command Behavior:**
+- All commands are non-interactive (headless)
+- No TUI or interactive prompts
+- Designed for scriptability and automation
+
+### Output Formats
+
+**Terminal Output (Logs):**
+- Plain text, human-readable logs
+- Structured workflow progression showing:
+  - Current agent (SM, Dev, Reviewer)
+  - Current action and status
+  - Handoff reasons between agents
+  - Next agent in sequence
+- Timestamped entries for debugging
+
+**Example Log Output:**
+```
+[14:23:07] WORKFLOW: Starting epic docs/epics/epic-001.md
+[14:23:08] SM: Creating story 1 of 5...
+[14:25:12] SM: Story created - "Add user authentication endpoint"
+[14:25:12] HANDOFF: SM → Dev (story ready for implementation)
+[14:25:13] DEV: Implementing story...
+[14:32:45] DEV: Implementation complete (3 files modified)
+[14:32:45] HANDOFF: Dev → Reviewer (code ready for review)
+[14:32:46] REVIEWER: Reviewing implementation...
+```
+
+**Inter-Agent Communication:**
+- YAML format for agent handoff files (human-readable, token-efficient)
+- State persistence in YAML format (`.bmad-auto-state.yaml`)
+- Consistent format across all orchestrator-managed files
+
+### Configuration Schema
+
+**Config File:** `.bmad-auto.toml` in project root
+
+```toml
+[workflow]
+epic_path = "docs/epics"
+state_file = ".bmad-auto-state.yaml"
+
+[agents]
+sm_model = "claude"               # Uses logged-in Anthropic subscription
+dev_model = "glm"                 # Uses GLM via ANTHROPIC_BASE_URL
+reviewer_model = "claude"         # Uses logged-in Anthropic subscription
+
+[git]
+auto_branch = true
+auto_commit = true
+branch_prefix = "epic/"
+```
+
+**Environment Variables (GLM only):**
+- `ANTHROPIC_API_KEY` - Required only for GLM-routed agents
+- `ANTHROPIC_BASE_URL` - Required only for GLM-routed agents
+
+**Authentication:**
+- Claude agents: Use logged-in Anthropic subscription (no API key needed)
+- GLM agents: Require `ANTHROPIC_API_KEY` + `ANTHROPIC_BASE_URL` environment variables
+
+### Scripting Support
+
+**Exit Codes:**
+
+| Code | Meaning |
+|------|---------|
+| 0 | Success - workflow completed |
+| 1 | Error - workflow failed (see logs) |
+| 2 | Paused - workflow paused, resumable |
+| 3 | Config error - invalid configuration |
+
+**Automation-Friendly:**
+- No interactive prompts
+- Clear exit codes for CI/CD integration
+- Structured logging for log aggregation
+- `--json` flag for machine-parseable status output (Growth feature)
 
