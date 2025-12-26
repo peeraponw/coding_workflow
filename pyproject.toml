@@ -1,7 +1,7 @@
 [project]
 name = "bmad-auto"
 version = "0.1.0"
-description = "Add your description here"
+description = "AI-powered development workflow orchestrator using BMAD methodology"
 readme = "README.md"
 authors = [
     { name = "Peerapon Wechsuwanmanee", email = "peerapon.w@gmail.com" }
@@ -19,7 +19,7 @@ dependencies = [
 ]
 
 [project.scripts]
-bmad-auto = "bmad_auto:main"
+bmad-auto = "bmad_auto.main:app"
 
 [build-system]
 requires = ["hatchling"]
