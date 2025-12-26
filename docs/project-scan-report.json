@@ -1,0 +1,64 @@
+{
+  "workflow_version": "1.2.0",
+  "timestamps": {
+    "started": "2025-12-26T00:00:00Z",
+    "last_updated": "2025-12-26T00:00:00Z",
+    "completed": "2025-12-26T00:00:00Z"
+  },
+  "mode": "initial_scan",
+  "scan_level": "deep",
+  "project_root": "/home/warm/Dropbox/Public/WORKs/Python/coding_workflow",
+  "output_folder": "/home/warm/Dropbox/Public/WORKs/Python/coding_workflow/docs",
+  "completed_steps": [
+    "step_1_classify",
+    "step_2_discover_docs",
+    "step_3_analyze_stack",
+    "step_4_conditional_scan",
+    "step_5_source_tree",
+    "step_8_generate_docs",
+    "step_10_generate_index"
+  ],
+  "current_step": "complete",
+  "findings": {
+    "project_type": "cli",
+    "repository_type": "monolith",
+    "primary_language": "python",
+    "python_version": ">=3.13",
+    "framework": "typer",
+    "build_system": "hatchling",
+    "test_framework": "pytest",
+    "implementation_status": {
+      "epics_total": 5,
+      "epics_completed": 5,
+      "stories_total": 23,
+      "stories_completed": 23
+    },
+    "technology_stack": {
+      "runtime": ["python>=3.13"],
+      "cli": ["typer>=0.21.0", "rich>=14.2.0"],
+      "async": ["anyio>=4.12.0"],
+      "ai": ["claude-agent-sdk>=0.1.18"],
+      "validation": ["pydantic>=2.12.5", "pydantic-settings>=2.12.0"],
+      "config": ["pyyaml>=6.0.3"],
+      "logging": ["structlog>=25.5.0"],
+      "testing": ["pytest", "pytest-asyncio", "pytest-cov"],
+      "linting": ["ruff", "pyright"]
+    },
+    "architecture_patterns": [
+      "vertical_slice",
+      "protocol_based_di",
+      "immutable_state",
+      "fail_fast",
+      "atomic_writes"
+    ]
+  },
+  "outputs_generated": [
+    "project-scan-report.json",
+    "index.md",
+    "project-overview.md",
+    "source-tree-analysis.md",
+    "architecture.md",
+    "development-guide.md"
+  ],
+  "resume_instructions": null
+}
