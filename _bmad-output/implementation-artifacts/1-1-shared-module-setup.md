@@ -1,6 +1,6 @@
 # Story 1.1: Shared Module Setup
 
-Status: in-progress
+Status: review
 
 ## Story
 
@@ -45,12 +45,13 @@ so that **all other modules have consistent definitions to import from**.
 
 ### Review Follow-ups (AI)
 
-- [ ] [AI-Review][MEDIUM] Add missing `tests/__init__.py` for proper package structure [src/bmad_auto/shared/tests/]
+- [x] [AI-Review][MEDIUM] Add missing `tests/__init__.py` for proper package structure [src/bmad_auto/shared/tests/]
 - [ ] [AI-Review][MEDIUM] Stage and commit all implementation files to git [src/bmad_auto/shared/]
-- [ ] [AI-Review][MEDIUM] Add type parameters to WorkflowState: `dict[str, Any]` [src/bmad_auto/shared/types.py:24]
-- [ ] [AI-Review][LOW] Add fixtures to conftest.py or remove empty file [src/bmad_auto/shared/tests/conftest.py]
-- [ ] [AI-Review][LOW] Add tests verifying re-exports from `bmad_auto.shared` package API [src/bmad_auto/shared/tests/]
-- [ ] [AI-Review][LOW] Consider using `Final[int]` for constants to enforce immutability [src/bmad_auto/shared/consts.py]
+- [x] [AI-Review][MEDIUM] Add type parameters to WorkflowState: `dict[str, Any]` [src/bmad_auto/shared/types.py:24]
+- [x] [AI-Review][LOW] Add fixtures to conftest.py or remove empty file [src/bmad_auto/shared/tests/conftest.py]
+- [x] [AI-Review][LOW] Add tests verifying re-exports from `bmad_auto.shared` package API [src/bmad_auto/shared/tests/]
+- [x] [AI-Review][LOW] Consider using `Final[int]` for constants to enforce immutability [src/bmad_auto/shared/consts.py]
+- [x] [AI-Review][MEDIUM] Fix unused `import sys` in test_reexports.py (ruff F401)
 
 ## Dev Notes
 

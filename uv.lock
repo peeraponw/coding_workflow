@@ -41,6 +41,7 @@ dependencies = [
     { name = "claude-agent-sdk" },
     { name = "pydantic-settings" },
     { name = "pyyaml" },
+    { name = "rich" },
     { name = "structlog" },
     { name = "typer" },
 ]
@@ -60,6 +61,7 @@ requires-dist = [
     { name = "claude-agent-sdk", specifier = ">=0.1.18" },
     { name = "pydantic-settings", specifier = ">=2.12.0" },
     { name = "pyyaml", specifier = ">=6.0.3" },
+    { name = "rich", specifier = ">=14.2.0" },
     { name = "structlog", specifier = ">=25.5.0" },
     { name = "typer", specifier = ">=0.21.0" },
 ]

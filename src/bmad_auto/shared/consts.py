@@ -3,25 +3,27 @@
 All constants MUST live in this file - no magic numbers/strings elsewhere.
 """
 
+from typing import Final
+
 # Exit codes
-EXIT_SUCCESS: int = 0
-EXIT_ERROR: int = 1
-EXIT_PAUSED: int = 2
-EXIT_CONFIG_ERROR: int = 3
+EXIT_SUCCESS: Final[int] = 0
+EXIT_ERROR: Final[int] = 1
+EXIT_PAUSED: Final[int] = 2
+EXIT_CONFIG_ERROR: Final[int] = 3
 
 # Agents
-AGENT_SM: str = "sm"
-AGENT_DEV: str = "dev"
-AGENT_REVIEWER: str = "reviewer"
+AGENT_SM: Final[str] = "sm"
+AGENT_DEV: Final[str] = "dev"
+AGENT_REVIEWER: Final[str] = "reviewer"
 
 # Phases
-PHASE_SM: str = "sm"
-PHASE_DEV: str = "dev"
-PHASE_REVIEW: str = "review"
+PHASE_SM: Final[str] = "sm"
+PHASE_DEV: Final[str] = "dev"
+PHASE_REVIEW: Final[str] = "review"
 
 # Status
-STATUS_PENDING: str = "pending"
-STATUS_IN_PROGRESS: str = "in-progress"
-STATUS_PAUSED: str = "paused"
-STATUS_COMPLETED: str = "completed"
-STATUS_FAILED: str = "failed"
+STATUS_PENDING: Final[str] = "pending"
+STATUS_IN_PROGRESS: Final[str] = "in-progress"
+STATUS_PAUSED: Final[str] = "paused"
+STATUS_COMPLETED: Final[str] = "completed"
+STATUS_FAILED: Final[str] = "failed"

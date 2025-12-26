@@ -1,6 +1,6 @@
 # Story 1.2: Logging Infrastructure
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -19,23 +19,23 @@ so that **logs are machine-parseable and user output is readable**.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create logging module (AC: 1-3)
-  - [ ] Create `src/bmad_auto/shared/logging.py`
-  - [ ] Implement `get_logger(name: str)` function returning structlog logger
-  - [ ] Configure structlog with timestamp processor
-- [ ] Task 2: Set up Rich console (AC: 2, 5)
-  - [ ] Create shared Console instance
-  - [ ] Define color constants for agent phases (SM_COLOR, DEV_COLOR, REVIEWER_COLOR)
-  - [ ] Create helper functions for agent-colored output
-- [ ] Task 3: Configure timestamp formatting (AC: 4)
-  - [ ] Add ISO timestamp to structlog output
-  - [ ] Ensure timestamps appear in both log and console output
-- [ ] Task 4: Export from shared module (AC: 1-2)
-  - [ ] Update `shared/__init__.py` to export logging utilities
-- [ ] Task 5: Write tests (AC: 6)
-  - [ ] Test logger creation
-  - [ ] Test structured logging with context
-  - [ ] Test console output formatting
+- [x] Task 1: Create logging module (AC: 1-3)
+  - [x] Create `src/bmad_auto/shared/logging.py`
+  - [x] Implement `get_logger(name: str)` function returning structlog logger
+  - [x] Configure structlog with timestamp processor
+- [x] Task 2: Set up Rich console (AC: 2, 5)
+  - [x] Create shared Console instance
+  - [x] Define color constants for agent phases (SM_COLOR, DEV_COLOR, REVIEWER_COLOR)
+  - [x] Create helper functions for agent-colored output
+- [x] Task 3: Configure timestamp formatting (AC: 4)
+  - [x] Add ISO timestamp to structlog output
+  - [x] Ensure timestamps appear in both log and console output
+- [x] Task 4: Export from shared module (AC: 1-2)
+  - [x] Update `shared/__init__.py` to export logging utilities
+- [x] Task 5: Write tests (AC: 6)
+  - [x] Test logger creation
+  - [x] Test structured logging with context
+  - [x] Test console output formatting
 
 ## Dev Notes
 
@@ -92,8 +92,45 @@ src/bmad_auto/shared/
 
 ### Agent Model Used
 
+claude-opus-4-5-20251101
+
 ### Debug Log References
+
+No debugging issues encountered.
 
 ### Completion Notes List
 
+**Implementation Summary:**
+- Created `src/bmad_auto/shared/logging.py` with structlog configuration and Rich console
+- Implemented `get_logger(name: str)` function returning configured structlog logger
+- Added `_add_timestamp` processor for ISO timestamps in all log entries
+- Created shared `console` instance (Rich Console) for user-facing output
+- Defined color constants: SM_COLOR="blue", DEV_COLOR="green", REVIEWER_COLOR="yellow"
+- Implemented helper functions: `print_sm()`, `print_dev()`, `print_reviewer()` for colored output
+- Exported all logging utilities from `shared/__init__.py`
+
+**Technical Decisions:**
+- Used structlog v25+ with EventDict type annotation for type safety
+- Timestamps added as ISO format strings via custom processor
+- Rich console with markup tags for color-coded agent output
+- Helper functions follow pattern from Dev Notes: `[color]AgentName:[/color] message`
+
+**Test Coverage:**
+- 7 tests added in `test_logging.py`
+- All 44 shared module tests pass
+- Tests cover: logger creation, structured logging, timestamps, console, colors, print functions
+
 ### File List
+
+- `pyproject.toml` (added rich dependency)
+- `src/bmad_auto/shared/logging.py` (created)
+- `src/bmad_auto/shared/__init__.py` (modified - added logging exports)
+- `src/bmad_auto/shared/tests/test_logging.py` (created)
+
+### Change Log
+
+- 2025-12-26: Implemented logging infrastructure with structlog and Rich console
+- Added `rich` dependency to pyproject.toml
+- Created logging module with get_logger, console, color constants, and print functions
+- Exported logging utilities from shared module
+- Added comprehensive test coverage for all logging functionality

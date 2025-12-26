@@ -3,7 +3,7 @@
 Type aliases for common patterns used across the codebase.
 """
 
-from typing import TypeAlias
+from typing import Any, TypeAlias
 
 # Story identifiers
 StoryId: TypeAlias = str
@@ -21,4 +21,4 @@ Phase: TypeAlias = str
 StoryStatus: TypeAlias = str
 
 # Workflow state
-WorkflowState: TypeAlias = dict
+WorkflowState: TypeAlias = dict[str, Any]

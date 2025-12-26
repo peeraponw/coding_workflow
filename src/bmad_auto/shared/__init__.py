@@ -3,6 +3,18 @@
 This module provides constants, types, and exceptions used across all other modules.
 """
 
+# Export logging utilities
+from bmad_auto.shared.logging import (
+    DEV_COLOR,
+    REVIEWER_COLOR,
+    SM_COLOR,
+    console,
+    get_logger,
+    print_dev,
+    print_reviewer,
+    print_sm,
+)
+
 # Export exit codes
 from bmad_auto.shared.consts import (
     EXIT_CONFIG_ERROR,
@@ -56,6 +68,15 @@ from bmad_auto.shared.exceptions import (
 )
 
 __all__ = [
+    # Logging
+    "get_logger",
+    "console",
+    "SM_COLOR",
+    "DEV_COLOR",
+    "REVIEWER_COLOR",
+    "print_sm",
+    "print_dev",
+    "print_reviewer",
     # Exit codes
     "EXIT_SUCCESS",
     "EXIT_ERROR",
