@@ -1,6 +1,6 @@
 # Story 3.1: Agent Protocol & Base Implementation
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -20,26 +20,26 @@ so that **all agents have consistent invocation patterns**.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create agents module structure (AC: 1)
-  - [ ] Create `src/bmad_auto/agents/__init__.py`
-  - [ ] Create `src/bmad_auto/agents/base.py`
-  - [ ] Export public API from __init__.py
-- [ ] Task 2: Implement AgentResult dataclass (AC: 1)
-  - [ ] Define success: bool field
-  - [ ] Define output: str field
-  - [ ] Define error: Optional[str] field
-  - [ ] Add factory methods for success/failure cases
-- [ ] Task 3: Implement AgentRole enum (AC: 1)
-  - [ ] Define SM, DEV, REVIEWER variants
-  - [ ] Link to AGENT_* constants from shared/consts.py
-- [ ] Task 4: Implement AgentProtocol (AC: 1-2)
-  - [ ] Use typing.Protocol for structural typing
-  - [ ] Define async run(command: str) -> AgentResult method
-  - [ ] Add runtime_checkable decorator
-- [ ] Task 5: Write tests (AC: 3-4)
-  - [ ] Test AgentResult creation
-  - [ ] Test protocol compliance check
-  - [ ] Verify pyright passes
+- [x] Task 1: Create agents module structure (AC: 1)
+  - [x] Create `src/bmad_auto/agents/__init__.py`
+  - [x] Create `src/bmad_auto/agents/base.py`
+  - [x] Export public API from __init__.py
+- [x] Task 2: Implement AgentResult dataclass (AC: 1)
+  - [x] Define success: bool field
+  - [x] Define output: str field
+  - [x] Define error: Optional[str] field
+  - [x] Add factory methods for success/failure cases
+- [x] Task 3: Implement AgentRole enum (AC: 1)
+  - [x] Define SM, DEV, REVIEWER variants
+  - [x] Link to AGENT_* constants from shared/consts.py
+- [x] Task 4: Implement AgentProtocol (AC: 1-2)
+  - [x] Use typing.Protocol for structural typing
+  - [x] Define async run(command: str) -> AgentResult method
+  - [x] Add runtime_checkable decorator
+- [x] Task 5: Write tests (AC: 3-4)
+  - [x] Test AgentResult creation
+  - [x] Test protocol compliance check
+  - [x] Verify pyright passes
 
 ## Dev Notes
 
@@ -108,9 +108,21 @@ src/bmad_auto/agents/
 ## Dev Agent Record
 
 ### Agent Model Used
+glm-4.7 (via Claude Code)
 
 ### Debug Log References
+None - implementation was straightforward
 
 ### Completion Notes List
+- All 4 AC verified
+- 11 tests written and passing
+- pyright 0 errors
+- Implementation followed story Dev Notes exactly
+- Added @runtime_checkable to AgentProtocol for isinstance() checks
+- AgentResult validation in __post_init__ prevents invalid states
 
 ### File List
+- src/bmad_auto/agents/__init__.py
+- src/bmad_auto/agents/base.py
+- src/bmad_auto/agents/tests/__init__.py
+- src/bmad_auto/agents/tests/test_base.py
