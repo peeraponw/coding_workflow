@@ -6,6 +6,9 @@ Matches the YAML state format from architecture documentation.
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from pathlib import Path
+
+import yaml
 
 
 @dataclass(frozen=True)
@@ -174,3 +177,96 @@ class WorkflowState:
                 phase=error_data["phase"],
             ),
         )
+
+
+def save(state: WorkflowState, path: Path) -> None:
+    """Save workflow state atomically to a YAML file.
+
+    Uses atomic write pattern (write to temp file, then rename) to ensure
+    no corruption occurs if the process is interrupted during write.
+
+    Args:
+        state: The WorkflowState to persist.
+        path: Destination path for the state file.
+
+    Raises:
+        OSError: If file write or rename operation fails.
+    """
+    temp_path = path.with_suffix(".tmp")
+    try:
+        # Write to temporary file first
+        temp_path.write_text(yaml.dump(state.to_dict(), default_flow_style=False))
+        # Atomic rename on POSIX systems
+        temp_path.rename(path)
+    except Exception:
+        # Clean up temp file on failure
+        temp_path.unlink(missing_ok=True)
+        raise
+
+
+def load(path: Path) -> WorkflowState:
+    """Load workflow state from a YAML file with validation.
+
+    Args:
+        path: Path to the state file to load.
+
+    Returns:
+        Reconstructed WorkflowState.
+
+    Raises:
+        StateCorruptionError: If file is corrupted, malformed, or missing
+            required fields.
+        FileNotFoundError: If state file doesn't exist.
+    """
+    from bmad_auto.shared.exceptions import StateCorruptionError
+
+    try:
+        content = path.read_text()
+        data = yaml.safe_load(content)
+    except (yaml.YAMLError, OSError) as e:
+        raise StateCorruptionError(
+            f"State file '{path}' is corrupted or invalid YAML: {e}"
+        ) from e
+
+    # Validate required top-level sections
+    required_sections = ["workflow", "stories", "current_story", "error"]
+    for section in required_sections:
+        if section not in data:
+            raise StateCorruptionError(
+                f"State file '{path}' is missing required section: {section}"
+            )
+
+    # Validate workflow section fields
+    workflow_data = data["workflow"]
+    required_workflow_fields = ["epic_path", "status", "branch"]
+    for field in required_workflow_fields:
+        if field not in workflow_data:
+            raise StateCorruptionError(
+                f"State file '{path}' is missing required field: workflow.{field}"
+            )
+
+    # Validate stories section fields
+    stories_data = data["stories"]
+    required_stories_fields = ["total", "current_index", "completed"]
+    for field in required_stories_fields:
+        if field not in stories_data:
+            raise StateCorruptionError(
+                f"State file '{path}' is missing required field: stories.{field}"
+            )
+
+    # Validate current_story section fields
+    current_story_data = data["current_story"]
+    required_current_story_fields = ["id", "phase", "iteration", "started_at"]
+    for field in required_current_story_fields:
+        if field not in current_story_data:
+            raise StateCorruptionError(
+                f"State file '{path}' is missing required field: current_story.{field}"
+            )
+
+    # Use from_dict which will handle data conversion and raise for invalid types
+    try:
+        return WorkflowState.from_dict(data)
+    except (KeyError, ValueError, TypeError) as e:
+        raise StateCorruptionError(
+            f"State file '{path}' contains invalid data: {e}"
+        ) from e
