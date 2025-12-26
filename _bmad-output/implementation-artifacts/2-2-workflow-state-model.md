@@ -1,6 +1,6 @@
 # Story 2.2: Workflow State Model
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -30,28 +30,28 @@ so that **all workflow progress can be tracked and persisted**.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create state module with dataclasses (AC: 1)
-  - [ ] Create `src/bmad_auto/core/state.py`
-  - [ ] Define WorkflowSection dataclass (epic_path, status, branch)
-  - [ ] Define StoriesSection dataclass (total, current_index, completed)
-  - [ ] Define CurrentStorySection dataclass (id, phase, iteration, started_at)
-  - [ ] Define ErrorSection dataclass (type, message, phase)
-  - [ ] Define main WorkflowState dataclass composing all sections
-- [ ] Task 2: Define status enum/constants (AC: 1)
-  - [ ] Use STATUS_* constants from shared/consts.py
-  - [ ] Use PHASE_* constants from shared/consts.py
-- [ ] Task 3: Add type hints (AC: 3)
-  - [ ] Use Optional for nullable fields
-  - [ ] Use list[CompletedStory] for completed stories
-  - [ ] Use proper datetime types for timestamps
-- [ ] Task 4: Add factory methods (AC: 1)
-  - [ ] `WorkflowState.new(epic_path, story_count)` - create initial state
-  - [ ] `WorkflowState.from_dict(data)` - create from YAML dict
-  - [ ] `to_dict()` - serialize to YAML-compatible dict
-- [ ] Task 5: Write tests (AC: 4)
-  - [ ] Test state creation with all fields
-  - [ ] Test serialization round-trip
-  - [ ] Test default values
+- [x] Task 1: Create state module with dataclasses (AC: 1)
+  - [x] Create `src/bmad_auto/core/state.py`
+  - [x] Define WorkflowSection dataclass (epic_path, status, branch)
+  - [x] Define StoriesSection dataclass (total, current_index, completed)
+  - [x] Define CurrentStorySection dataclass (id, phase, iteration, started_at)
+  - [x] Define ErrorSection dataclass (type, message, phase)
+  - [x] Define main WorkflowState dataclass composing all sections
+- [x] Task 2: Define status enum/constants (AC: 1)
+  - [x] Use STATUS_* constants from shared/consts.py
+  - [x] Use PHASE_* constants from shared/consts.py
+- [x] Task 3: Add type hints (AC: 3)
+  - [x] Use Optional for nullable fields
+  - [x] Use list[CompletedStory] for completed stories
+  - [x] Use proper datetime types for timestamps
+- [x] Task 4: Add factory methods (AC: 1)
+  - [x] `WorkflowState.new(epic_path, story_count)` - create initial state
+  - [x] `WorkflowState.from_dict(data)` - create from YAML dict
+  - [x] `to_dict()` - serialize to YAML-compatible dict
+- [x] Task 5: Write tests (AC: 4)
+  - [x] Test state creation with all fields
+  - [x] Test serialization round-trip
+  - [x] Test default values
 
 ## Dev Notes
 
@@ -115,8 +115,23 @@ src/bmad_auto/core/
 
 ### Agent Model Used
 
+claude-opus-4-5-20251101
+
 ### Debug Log References
+
+None - implementation completed without issues.
 
 ### Completion Notes List
 
+- Implemented 5 frozen dataclasses: CompletedStory, WorkflowSection, StoriesSection, CurrentStorySection, ErrorSection
+- WorkflowState composes all sections with frozen immutability
+- Factory method `WorkflowState.new()` creates initial state with proper defaults
+- `to_dict()`/`from_dict()` enable YAML serialization with datetime ISO format
+- Uses existing STATUS_* and PHASE_* constants from shared/consts.py
+- All 11 tests pass (dataclass creation, serialization, round-trip, defaults)
+- Full test suite (105 tests) passes with no regressions
+
 ### File List
+
+- `src/bmad_auto/core/state.py` (new) - WorkflowState dataclasses with factory methods and serialization
+- `src/bmad_auto/core/tests/test_state.py` (new) - Comprehensive tests for state model
