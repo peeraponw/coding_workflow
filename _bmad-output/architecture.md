@@ -1,5 +1,5 @@
 ---
-stepsCompleted: [1, 2, 3, 4, 5]
+stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8]
 inputDocuments:
   - "_bmad-output/prd.md"
   - "_bmad-output/project-planning-artifacts/research/technical-claude-codex-cli-integration-research-2025-12-25.md"
@@ -9,6 +9,9 @@ user_name: 'Warm'
 date: '2025-12-26'
 hasProjectContext: true
 projectContextFile: "src/AGENTS.md"
+lastStep: 8
+status: 'complete'
+completedAt: '2025-12-26'
 ---
 
 # Architecture Decision Document
@@ -485,3 +488,356 @@ error:
 7. Co-locate tests with features
 8. Maintain 80% test coverage
 
+## Project Structure & Boundaries
+
+### Requirements to Structure Mapping
+
+| FR Category | Module Location |
+|-------------|-----------------|
+| Workflow Execution (FR1-4) | `core/orchestrator.py` |
+| Agent Orchestration (FR5-11) | `agents/` |
+| State Management (FR12-16) | `core/state.py` |
+| Progress Monitoring (FR17-21) | `core/orchestrator.py` + `shared/logging.py` |
+| Git Integration (FR22-25) | `features/git_integration/` |
+| Configuration (FR26-31) | `core/config.py` |
+| Error Handling (FR32-34) | `shared/exceptions.py` + all modules |
+
+### Complete Project Directory Structure
+
+```
+bmad-auto/
+├── README.md
+├── pyproject.toml                    # hatchling build, entry points
+├── uv.lock
+├── .python-version
+├── .gitignore
+├── .env.example                      # ANTHROPIC_API_KEY, ANTHROPIC_BASE_URL
+│
+├── src/
+│   └── bmad_auto/
+│       ├── __init__.py               # Package version
+│       ├── main.py                   # Typer CLI entry point
+│       │
+│       ├── shared/
+│       │   ├── __init__.py
+│       │   ├── consts.py             # EXIT_*, AGENT_*, PHASE_*, STATUS_*
+│       │   ├── types.py              # Type aliases, Protocols
+│       │   ├── exceptions.py         # BmadAutoError hierarchy
+│       │   └── logging.py            # structlog setup, Rich console
+│       │
+│       ├── core/
+│       │   ├── __init__.py
+│       │   ├── orchestrator.py       # WorkflowOrchestrator (FR1-4, FR17-21)
+│       │   ├── state.py              # WorkflowState, YAML persistence (FR12-16)
+│       │   ├── config.py             # InternalSettings + UserConfig loader
+│       │   └── tests/
+│       │       ├── __init__.py
+│       │       ├── conftest.py       # Shared fixtures
+│       │       ├── test_orchestrator.py
+│       │       ├── test_state.py
+│       │       └── test_config.py
+│       │
+│       ├── agents/
+│       │   ├── __init__.py
+│       │   ├── base.py               # AgentProtocol, AgentResult
+│       │   ├── claude.py             # ClaudeAgent (FR5-10)
+│       │   ├── prompts.py            # PromptBuilder for SM/Dev/Reviewer
+│       │   └── tests/
+│       │       ├── __init__.py
+│       │       ├── conftest.py       # Mock agent fixtures
+│       │       ├── test_claude.py
+│       │       └── test_prompts.py
+│       │
+│       └── features/
+│           └── git_integration/
+│               ├── __init__.py
+│               ├── handler.py        # GitHandler (FR22-25)
+│               └── tests/
+│                   ├── __init__.py
+│                   └── test_handler.py
+│
+└── tests/                            # Integration tests only
+    ├── __init__.py
+    ├── conftest.py                   # Integration test fixtures
+    └── integration/
+        ├── __init__.py
+        └── test_full_workflow.py     # Real agent tests (@pytest.mark.integration)
+```
+
+### Architectural Boundaries
+
+**CLI Boundary (`main.py`):**
+- Entry point for all commands: `run`, `status`, `resume`
+- Wraps async orchestrator with `anyio.run()`
+- Returns exit codes from `shared/consts.py`
+
+**Orchestrator Boundary (`core/orchestrator.py`):**
+- Owns workflow state transitions
+- Injects context into agent prompts
+- Coordinates agent → state → git flow
+- Never touches file I/O directly (delegates to state/git)
+
+**Agent Boundary (`agents/`):**
+- Abstract via `AgentProtocol`
+- Agents receive prompts, return `AgentResult`
+- No knowledge of workflow state or git
+
+**State Boundary (`core/state.py`):**
+- Owns YAML file I/O (atomic writes)
+- Provides `WorkflowState` dataclass
+- Validates state integrity on load
+
+**Git Boundary (`features/git_integration/`):**
+- Owns all git CLI subprocess calls
+- Branch creation, commits, status checks
+- No knowledge of agents or state
+
+### Data Flow
+
+```
+User Command
+     │
+     ▼
+┌─────────────┐
+│   main.py   │  CLI parsing, anyio.run()
+└─────┬───────┘
+      │
+      ▼
+┌─────────────────┐
+│  orchestrator   │  Workflow coordination
+└─────┬───────────┘
+      │
+      ├──────────────────┬──────────────────┐
+      ▼                  ▼                  ▼
+┌───────────┐      ┌───────────┐      ┌───────────┐
+│  agents/  │      │  state.py │      │   git/    │
+│  claude   │      │   YAML    │      │  handler  │
+└───────────┘      └───────────┘      └───────────┘
+      │                  │                  │
+      ▼                  ▼                  ▼
+Claude Agent SDK   .bmad-auto-state.yaml   git CLI
+```
+
+### File Purpose Summary
+
+| File | Purpose | FR Coverage |
+|------|---------|-------------|
+| `main.py` | CLI entry, Typer commands | FR1-2 |
+| `orchestrator.py` | Story loop, agent coordination | FR1-4, FR17-21 |
+| `state.py` | YAML state read/write, atomic saves | FR12-16 |
+| `config.py` | pydantic_settings + YAML user config | FR26-31 |
+| `agents/base.py` | AgentProtocol, AgentResult | - |
+| `agents/claude.py` | Claude Agent SDK wrapper | FR5-10 |
+| `agents/prompts.py` | Prompt builders per role | FR11 |
+| `git_integration/handler.py` | Branch/commit operations | FR22-25 |
+| `shared/exceptions.py` | Domain exceptions | FR32-34 |
+| `shared/consts.py` | All constants | FR33 |
+| `shared/logging.py` | structlog + Rich setup | FR20-21 |
+
+## Architecture Validation Results
+
+### Coherence Validation ✅
+
+All technology choices are compatible:
+- Python 3.11+ with Claude Agent SDK (anyio-based)
+- Typer CLI with anyio.run() wrapper for async
+- hatchling build with uvx distribution
+- YAML for state/config with pyyaml
+- structlog for logging, Rich for display (separate concerns)
+- pydantic_settings for internal config, YAML for user config (layered)
+
+No contradictory decisions found.
+
+### Requirements Coverage ✅
+
+**All 34 Functional Requirements covered:**
+- FR1-4 → `core/orchestrator.py`
+- FR5-11 → `agents/`
+- FR12-16 → `core/state.py`
+- FR17-21 → `orchestrator.py` + `shared/logging.py`
+- FR22-25 → `features/git_integration/`
+- FR26-31 → `core/config.py`
+- FR32-34 → `shared/exceptions.py`
+
+**All 14 Non-Functional Requirements addressed:**
+- NFR1-5 (Reliability): Atomic writes, state validation
+- NFR6-11 (Integration): Claude SDK, YAML, git CLI
+- NFR12-14 (Security): Env vars only, no credential logging
+
+### Key Architectural Clarification: Agent Invocation
+
+**bmad-auto does NOT build prompts directly.** It invokes existing bmad agents via Claude Code skill commands:
+
+```python
+# Example agent invocation pattern
+await agent.run("/bmad:bmm:agents:sm create stories from epics 02")
+await agent.run("/bmad:bmm:agents:dev implement story-03")
+await agent.run("/bmad:bmm:workflows:code-review review story-03")
+```
+
+**Implications:**
+- `agents/prompts.py` → Renamed to `agents/commands.py` (builds command strings, not prompts)
+- Prompt logic lives in bmad agent definitions, not bmad-auto
+- bmad-auto is purely an orchestrator—coordinates agent invocations, manages state, handles git
+
+### Configuration Layers (Finalized)
+
+**Internal Settings (pydantic_settings) - Pre-distribution:**
+```python
+class InternalSettings(BaseSettings):
+    default_timeout: int = 600
+    max_retries: int = 3
+    retry_delay_base: int = 5      # seconds
+    retry_delay_max: int = 60      # seconds
+```
+
+**User Config (.bmad-auto.yaml) - Runtime:**
+```yaml
+workflow:
+  epic_path: "docs/epics"
+  state_file: ".bmad-auto-state.yaml"
+agents:
+  sm_model: "claude"
+  dev_model: "glm"
+  reviewer_model: "claude"
+git:
+  auto_branch: true
+  auto_commit: true
+  branch_prefix: "epic/"
+```
+
+**Secrets (.env) - Runtime:**
+```
+ANTHROPIC_API_KEY=...
+ANTHROPIC_BASE_URL=...
+```
+
+### Implementation Readiness ✅
+
+- Complete project structure defined
+- All files mapped to requirements
+- Boundaries clearly established
+- AGENTS.md provides comprehensive development rules
+- Agent invocation pattern clarified (bmad skill commands)
+
+### Architecture Completeness Checklist
+
+- [x] Project context analyzed
+- [x] Technical constraints identified (AGENTS.md compliance)
+- [x] Starter template selected (uv init --package)
+- [x] Core decisions documented (orchestration, async, logging, testing)
+- [x] Implementation patterns defined (aligned with AGENTS.md)
+- [x] Project structure complete (vertical slice)
+- [x] Requirements mapped to structure
+- [x] Boundaries defined
+- [x] Agent invocation pattern clarified
+- [x] Configuration layers finalized
+- [x] Validation passed
+
+### Architecture Readiness Assessment
+
+**Status:** READY FOR IMPLEMENTATION
+
+**Confidence Level:** High
+
+**Key Strengths:**
+- Clear separation: bmad-auto orchestrates, bmad agents execute
+- Comprehensive development standards via AGENTS.md
+- All requirements traceable to specific modules
+- Pause/resume capability designed in from the start
+- Three-layer config with no overlap
+
+**Deferred to Post-MVP:**
+- YAML schema validation with Pydantic models (nice-to-have)
+- TUI dashboard
+- Codex CLI support
+
+### First Implementation Step
+
+```bash
+uv init --package --build-backend hatchling bmad-auto
+cd bmad-auto
+uv add typer[all] pyyaml claude-agent-sdk anyio structlog pydantic-settings
+uv add --dev pytest pytest-asyncio pytest-cov ruff pyright
+```
+
+## Architecture Completion Summary
+
+### Workflow Completion
+
+**Architecture Decision Workflow:** COMPLETED ✅
+**Total Steps Completed:** 8
+**Date Completed:** 2025-12-26
+**Document Location:** `_bmad-output/architecture.md`
+
+### Final Architecture Deliverables
+
+**Complete Architecture Document:**
+- All architectural decisions documented with specific versions
+- Implementation patterns ensuring AI agent consistency
+- Complete project structure with all files and directories
+- Requirements to architecture mapping
+- Validation confirming coherence and completeness
+
+**Implementation Ready Foundation:**
+- 5 core architectural decisions made (orchestration, async, logging, testing, config layers)
+- Implementation patterns aligned with AGENTS.md
+- 6 architectural components specified (CLI, orchestrator, agents, state, git, shared)
+- 48 requirements fully supported (34 FR + 14 NFR)
+
+**AI Agent Implementation Guide:**
+- Technology stack with verified patterns
+- Consistency rules that prevent implementation conflicts
+- Project structure with clear boundaries
+- Agent invocation pattern via bmad skill commands
+
+### Implementation Handoff
+
+**For AI Agents:**
+This architecture document is your complete guide for implementing bmad-auto. Follow all decisions, patterns, and structures exactly as documented. Reference `src/AGENTS.md` for Python development standards.
+
+**First Implementation Priority:**
+```bash
+uv init --package --build-backend hatchling bmad-auto
+cd bmad-auto
+uv add typer[all] pyyaml claude-agent-sdk anyio structlog pydantic-settings
+uv add --dev pytest pytest-asyncio pytest-cov ruff pyright
+```
+
+**Development Sequence:**
+1. Initialize project using documented starter template
+2. Set up development environment per architecture
+3. Implement shared/ module (consts, exceptions, types, logging)
+4. Implement core/ module (config, state, orchestrator)
+5. Implement agents/ module (base, claude, commands)
+6. Implement features/git_integration/
+7. Implement main.py CLI entry point
+8. Add tests following vertical slice pattern
+
+### Quality Assurance Checklist
+
+**✅ Architecture Coherence**
+- [x] All decisions work together without conflicts
+- [x] Technology choices are compatible
+- [x] Patterns support the architectural decisions
+- [x] Structure aligns with all choices
+
+**✅ Requirements Coverage**
+- [x] All 34 functional requirements are supported
+- [x] All 14 non-functional requirements are addressed
+- [x] Cross-cutting concerns are handled
+- [x] Integration points are defined
+
+**✅ Implementation Readiness**
+- [x] Decisions are specific and actionable
+- [x] Patterns prevent agent conflicts
+- [x] Structure is complete and unambiguous
+- [x] AGENTS.md provides comprehensive development rules
+
+---
+
+**Architecture Status:** READY FOR IMPLEMENTATION ✅
+
+**Next Phase:** Begin implementation using the architectural decisions and patterns documented herein.
+
+**Document Maintenance:** Update this architecture when major technical decisions are made during implementation.
