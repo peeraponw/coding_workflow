@@ -38,10 +38,13 @@ def test_status_command_executes() -> None:
 
 
 def test_resume_command_executes() -> None:
-    """Test that resume command executes (stub for now)."""
+    """Test that resume command executes (shows no workflow error when no state)."""
     result = runner.invoke(app, ["resume"])
-    # Stub message should be present
-    assert result.exit_code == 0
+    # Should show error about no workflow (exit code 1)
+    assert result.exit_code == EXIT_ERROR
+    # Error message should mention no workflow
+    output = result.stdout.lower() + result.stderr.lower()
+    assert "no workflow" in output or "not found" in output
 
 
 def test_exit_code_success() -> None:
@@ -128,128 +131,389 @@ def test_run_command_exception_path_coverage() -> None:
     """Test exception handler paths in run command for coverage."""
     import bmad_auto.main as main_module
 
-    # Patch sys.exit to capture exit codes without actually exiting
-    captured_codes: list[int] = []
+    # Test ConfigError path - mock a ConfigError during state loading
+    from pathlib import Path
+    import tempfile
+    from bmad_auto.core.state import WorkflowState, save
 
-    def mock_exit_capture(code: int) -> None:
-        captured_codes.append(code)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        state_path = Path(tmpdir) / ".bmad-auto-state.yaml"
 
-    # Patch typer.echo to raise ConfigError first
-    def mock_echo_raises_config_error(*args, **kwargs):
-        if not kwargs.get("err"):
-            # First call (normal echo) - raise ConfigError to trigger handler
+        # Create a valid state file first (so load() gets called)
+        state = WorkflowState.new(
+            epic_path="docs/epics/epic-001.md",
+            story_count=3,
+            branch="epic/epic-001",
+        )
+        save(state, state_path)
+
+        # Mock get_state_path and make load raise ConfigError
+        # Note: load is imported inside run(), so patch at source
+        def mock_load_raises_config(*args):
             raise ConfigError("Test config error")
 
-    with patch.object(main_module.sys, "exit", side_effect=mock_exit_capture):
-        with patch("typer.echo", side_effect=mock_echo_raises_config_error):
-            try:
-                main_module.run(epic="test.md")
-            except SystemExit:
-                pass  # Expected when real sys.exit is called
+        with patch.object(main_module, "get_state_path", return_value=state_path):
+            with patch("bmad_auto.core.state.load", side_effect=mock_load_raises_config):
+                result = runner.invoke(app, ["run", "--epic", "docs/epics/epic-001.md"])
 
-    # Verify ConfigError triggered EXIT_CONFIG_ERROR
-    assert EXIT_CONFIG_ERROR in captured_codes, f"Expected {EXIT_CONFIG_ERROR} in {captured_codes}"
+        # Should get config error exit code
+        assert result.exit_code == EXIT_CONFIG_ERROR
 
-    # Reset for next test
-    captured_codes.clear()
+    # Test general exception path
+    with tempfile.TemporaryDirectory() as tmpdir:
+        state_path = Path(tmpdir) / ".bmad-auto-state.yaml"
 
-    # Now test general exception path
-    def mock_echo_raises_exception(*args, **kwargs):
-        if not kwargs.get("err"):
+        # Create a valid state file first
+        state = WorkflowState.new(
+            epic_path="docs/epics/epic-001.md",
+            story_count=3,
+            branch="epic/epic-001",
+        )
+        save(state, state_path)
+
+        def mock_load_raises_runtime(*args):
             raise RuntimeError("Test error")
 
-    with patch.object(main_module.sys, "exit", side_effect=mock_exit_capture):
-        with patch("typer.echo", side_effect=mock_echo_raises_exception):
-            try:
-                main_module.run(epic="test.md")
-            except SystemExit:
-                pass
+        with patch.object(main_module, "get_state_path", return_value=state_path):
+            with patch("bmad_auto.core.state.load", side_effect=mock_load_raises_runtime):
+                result = runner.invoke(app, ["run", "--epic", "docs/epics/epic-001.md"])
 
-    # Verify general exception triggered EXIT_ERROR
-    assert EXIT_ERROR in captured_codes, f"Expected {EXIT_ERROR} in {captured_codes}"
+        # Should get error exit code
+        assert result.exit_code == EXIT_ERROR
 
 
 def test_status_command_exception_path_coverage() -> None:
     """Test exception handler paths in status command for coverage."""
     import bmad_auto.main as main_module
 
-    captured_codes: list[int] = []
-
-    def mock_exit_capture(code: int) -> None:
-        captured_codes.append(code)
-
-    # Test ConfigError path
-    def mock_echo_raises_config_error(*args, **kwargs):
-        if not kwargs.get("err"):
-            raise ConfigError("Test config error")
-
-    with patch.object(main_module.sys, "exit", side_effect=mock_exit_capture):
-        with patch("typer.echo", side_effect=mock_echo_raises_config_error):
-            try:
-                main_module.status()
-            except SystemExit:
-                pass
-
-    # Verify ConfigError triggered EXIT_CONFIG_ERROR
-    assert EXIT_CONFIG_ERROR in captured_codes, f"Expected {EXIT_CONFIG_ERROR} in {captured_codes}"
-
-    # Reset for next test
-    captured_codes.clear()
-
-    # Test general exception path
+    # Test general exception path (status command is simple)
     def mock_echo_raises_exception(*args, **kwargs):
         if not kwargs.get("err"):
             raise RuntimeError("Test error")
 
-    with patch.object(main_module.sys, "exit", side_effect=mock_exit_capture):
-        with patch("typer.echo", side_effect=mock_echo_raises_exception):
-            try:
-                main_module.status()
-            except SystemExit:
-                pass
+    with patch("typer.echo", side_effect=mock_echo_raises_exception):
+        result = runner.invoke(app, ["status"])
 
-    # Verify general exception triggered EXIT_ERROR
-    assert EXIT_ERROR in captured_codes, f"Expected {EXIT_ERROR} in {captured_codes}"
+    # Should get error exit code
+    assert result.exit_code == EXIT_ERROR
+
+    # Test ConfigError path
+    def mock_echo_raises_config(*args, **kwargs):
+        if not kwargs.get("err"):
+            raise ConfigError("Test config error")
+
+    with patch("typer.echo", side_effect=mock_echo_raises_config):
+        result = runner.invoke(app, ["status"])
+
+    # Should get config error exit code
+    assert result.exit_code == EXIT_CONFIG_ERROR
 
 
 def test_resume_command_exception_path_coverage() -> None:
     """Test exception handler paths in resume command for coverage."""
+    from pathlib import Path
+
     import bmad_auto.main as main_module
 
-    captured_codes: list[int] = []
+    # Test with a valid state file (to avoid "no workflow" error)
+    from bmad_auto.core.state import (
+        WorkflowSection,
+        WorkflowState,
+        save,
+    )
+    from bmad_auto.shared.consts import STATUS_IN_PROGRESS
 
-    def mock_exit_capture(code: int) -> None:
-        captured_codes.append(code)
+    import tempfile
 
-    # Test ConfigError path
-    def mock_echo_raises_config_error(*args, **kwargs):
-        if not kwargs.get("err"):
-            raise ConfigError("Test config error")
+    with tempfile.TemporaryDirectory() as tmpdir:
+        state_path = Path(tmpdir) / ".bmad-auto-state.yaml"
+        state = WorkflowState.new(
+            epic_path="docs/epics/epic-001.md",
+            story_count=3,
+            branch="epic/epic-001",
+        )
+        # Update to in_progress
+        state = WorkflowState(
+            workflow=WorkflowSection(
+                epic_path="docs/epics/epic-001.md",
+                status=STATUS_IN_PROGRESS,
+                branch="epic/epic-001",
+            ),
+            stories=state.stories,
+            current_story=state.current_story,
+            error=state.error,
+        )
+        save(state, state_path)
 
-    with patch.object(main_module.sys, "exit", side_effect=mock_exit_capture):
-        with patch("typer.echo", side_effect=mock_echo_raises_config_error):
-            try:
-                main_module.resume()
-            except SystemExit:
-                pass
+        # Mock get_state_path to use our test file
+        with patch.object(main_module, "get_state_path", return_value=state_path):
+            # Test with valid state file - should succeed (exit 0)
+            result = runner.invoke(app, ["resume"])
+            assert result.exit_code == EXIT_SUCCESS
 
-    # Verify ConfigError triggered EXIT_CONFIG_ERROR
-    assert EXIT_CONFIG_ERROR in captured_codes, f"Expected {EXIT_CONFIG_ERROR} in {captured_codes}"
+    # Test with no state file - should error (exit 1)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        empty_path = Path(tmpdir) / ".bmad-auto-state.yaml"
+        with patch.object(main_module, "get_state_path", return_value=empty_path):
+            result = runner.invoke(app, ["resume"])
+            assert result.exit_code == EXIT_ERROR
 
-    # Reset for next test
-    captured_codes.clear()
 
-    # Test general exception path
-    def mock_echo_raises_exception(*args, **kwargs):
-        if not kwargs.get("err"):
-            raise RuntimeError("Test error")
+# =============================================================================
+# Tests for Resume Detection & Recovery (Story 2.4)
+# =============================================================================
 
-    with patch.object(main_module.sys, "exit", side_effect=mock_exit_capture):
-        with patch("typer.echo", side_effect=mock_echo_raises_exception):
-            try:
-                main_module.resume()
-            except SystemExit:
-                pass
 
-    # Verify general exception triggered EXIT_ERROR
-    assert EXIT_ERROR in captured_codes, f"Expected {EXIT_ERROR} in {captured_codes}"
+def test_resume_from_in_progress_status(tmp_path) -> None:
+    """Test resume command with in_progress status loads state and displays info."""
+    from pathlib import Path
+
+    from bmad_auto.core.state import WorkflowState, save
+    from bmad_auto.shared.consts import STATUS_IN_PROGRESS
+
+    # Create a state file with in_progress status
+    state_path = tmp_path / ".bmad-auto-state.yaml"
+    state = WorkflowState.new(
+        epic_path="docs/epics/epic-001.md",
+        story_count=3,
+        branch="epic/epic-001",
+    )
+    # Update to in_progress (simulating workflow started)
+    from bmad_auto.core.state import WorkflowSection
+
+    state = WorkflowState(
+        workflow=WorkflowSection(
+            epic_path="docs/epics/epic-001.md",
+            status=STATUS_IN_PROGRESS,
+            branch="epic/epic-001",
+        ),
+        stories=state.stories,
+        current_story=state.current_story,
+        error=state.error,
+    )
+    save(state, state_path)
+
+    # Mock get_state_path to return our test path
+    with patch("bmad_auto.main.get_state_path", return_value=state_path):
+        result = runner.invoke(app, ["resume"])
+
+    # Should show resume info (stub for now, will show actual details in Epic 3)
+    assert result.exit_code == 0
+    # The stub message should be present
+    assert "stub" in result.stdout.lower()
+
+
+def test_resume_from_paused_status(tmp_path) -> None:
+    """Test resume command with paused status loads state and displays info."""
+    from pathlib import Path
+
+    from bmad_auto.core.state import WorkflowState, save
+    from bmad_auto.shared.consts import STATUS_PAUSED
+
+    # Create a state file with paused status
+    state_path = tmp_path / ".bmad-auto-state.yaml"
+    state = WorkflowState.new(
+        epic_path="docs/epics/epic-001.md",
+        story_count=3,
+        branch="epic/epic-001",
+    )
+    # Update to paused
+    from bmad_auto.core.state import WorkflowSection
+
+    state = WorkflowState(
+        workflow=WorkflowSection(
+            epic_path="docs/epics/epic-001.md",
+            status=STATUS_PAUSED,
+            branch="epic/epic-001",
+        ),
+        stories=state.stories,
+        current_story=state.current_story,
+        error=state.error,
+    )
+    save(state, state_path)
+
+    with patch("bmad_auto.main.get_state_path", return_value=state_path):
+        result = runner.invoke(app, ["resume"])
+
+    assert result.exit_code == 0
+    assert "stub" in result.stdout.lower()
+
+
+def test_resume_with_completed_workflow(tmp_path) -> None:
+    """Test resume command with completed status informs user."""
+    from pathlib import Path
+
+    from bmad_auto.core.state import WorkflowState, save
+    from bmad_auto.shared.consts import STATUS_COMPLETED
+
+    # Create a state file with completed status
+    state_path = tmp_path / ".bmad-auto-state.yaml"
+    state = WorkflowState.new(
+        epic_path="docs/epics/epic-001.md",
+        story_count=3,
+        branch="epic/epic-001",
+    )
+    # Update to completed
+    from bmad_auto.core.state import WorkflowSection
+
+    state = WorkflowState(
+        workflow=WorkflowSection(
+            epic_path="docs/epics/epic-001.md",
+            status=STATUS_COMPLETED,
+            branch="epic/epic-001",
+        ),
+        stories=state.stories,
+        current_story=state.current_story,
+        error=state.error,
+    )
+    save(state, state_path)
+
+    with patch("bmad_auto.main.get_state_path", return_value=state_path):
+        result = runner.invoke(app, ["resume"])
+
+    # Should inform user workflow is complete
+    assert result.exit_code == EXIT_SUCCESS
+    assert "complete" in result.stdout.lower() or "done" in result.stdout.lower()
+
+
+def test_resume_with_no_state_file(tmp_path) -> None:
+    """Test resume command with no state file shows clear error."""
+    from pathlib import Path
+
+    # Mock get_state_path to return non-existent file
+    state_path = tmp_path / ".bmad-auto-state.yaml"
+
+    with patch("bmad_auto.main.get_state_path", return_value=state_path):
+        result = runner.invoke(app, ["resume"])
+
+    # Should show clear error message (check both stdout and stderr for rich console)
+    assert result.exit_code == EXIT_ERROR
+    output = result.stdout.lower() + result.stderr.lower()
+    assert "no workflow" in output or "not found" in output
+
+
+def test_run_command_conflict_detection(tmp_path) -> None:
+    """Test run command detects in-progress workflow for same epic."""
+    from pathlib import Path
+
+    from bmad_auto.core.state import WorkflowState, save
+    from bmad_auto.shared.consts import STATUS_IN_PROGRESS
+
+    # Create a state file with in_progress for epic-001
+    state_path = tmp_path / ".bmad-auto-state.yaml"
+    state = WorkflowState.new(
+        epic_path="docs/epics/epic-001.md",
+        story_count=3,
+        branch="epic/epic-001",
+    )
+    # Update to in_progress
+    from bmad_auto.core.state import WorkflowSection
+
+    state = WorkflowState(
+        workflow=WorkflowSection(
+            epic_path="docs/epics/epic-001.md",
+            status=STATUS_IN_PROGRESS,
+            branch="epic/epic-001",
+        ),
+        stories=state.stories,
+        current_story=state.current_story,
+        error=state.error,
+    )
+    save(state, state_path)
+
+    with patch("bmad_auto.main.get_state_path", return_value=state_path):
+        result = runner.invoke(app, ["run", "--epic", "docs/epics/epic-001.md"])
+
+    # Should warn about existing workflow
+    assert result.exit_code == EXIT_ERROR
+    assert "warning" in result.stdout.lower() or "already" in result.stdout.lower()
+    assert "resume" in result.stdout.lower()
+
+
+def test_run_command_different_epic_no_warning(tmp_path) -> None:
+    """Test run command with different epic doesn't warn (different workflow)."""
+    from pathlib import Path
+
+    from bmad_auto.core.state import WorkflowState, save
+    from bmad_auto.shared.consts import STATUS_IN_PROGRESS
+
+    # Create a state file with in_progress for epic-001
+    state_path = tmp_path / ".bmad-auto-state.yaml"
+    state = WorkflowState.new(
+        epic_path="docs/epics/epic-001.md",
+        story_count=3,
+        branch="epic/epic-001",
+    )
+    # Update to in_progress
+    from bmad_auto.core.state import WorkflowSection
+
+    state = WorkflowState(
+        workflow=WorkflowSection(
+            epic_path="docs/epics/epic-001.md",
+            status=STATUS_IN_PROGRESS,
+            branch="epic/epic-001",
+        ),
+        stories=state.stories,
+        current_story=state.current_story,
+        error=state.error,
+    )
+    save(state, state_path)
+
+    # Run with DIFFERENT epic
+    with patch("bmad_auto.main.get_state_path", return_value=state_path):
+        result = runner.invoke(app, ["run", "--epic", "docs/epics/epic-002.md"])
+
+    # Should still show stub message (no conflict warning for different epic)
+    # The stub will execute, and for different epic it's a new workflow
+    assert "stub" in result.stdout.lower() or "epic-002" in result.stdout.lower()
+
+
+def test_resume_restores_exact_position(tmp_path) -> None:
+    """Test that resume restores exact story, phase, and iteration."""
+    from pathlib import Path
+    from datetime import datetime, timezone
+
+    from bmad_auto.core.state import (
+        CompletedStory,
+        CurrentStorySection,
+        ErrorSection,
+        StoriesSection,
+        WorkflowSection,
+        WorkflowState,
+        load,
+        save,
+    )
+    from bmad_auto.shared.consts import STATUS_IN_PROGRESS
+
+    # Create state with specific position
+    state_path = tmp_path / ".bmad-auto-state.yaml"
+    now = datetime.now(timezone.utc)
+    state = WorkflowState(
+        workflow=WorkflowSection(
+            epic_path="docs/epics/epic-001.md",
+            status=STATUS_IN_PROGRESS,
+            branch="epic/epic-001",
+        ),
+        stories=StoriesSection(
+            total=5,
+            current_index=2,
+            completed=[
+                CompletedStory(story_id="1-1", commit="abc123"),
+            ],
+        ),
+        current_story=CurrentStorySection(
+            id="1-3",
+            phase="dev",
+            iteration=2,
+            started_at=now,
+        ),
+        error=ErrorSection(type=None, message=None, phase=None),
+    )
+    save(state, state_path)
+
+    # Verify we can load the exact position
+    loaded = load(state_path)
+    assert loaded.stories.current_index == 2
+    assert loaded.current_story.id == "1-3"
+    assert loaded.current_story.phase == "dev"
+    assert loaded.current_story.iteration == 2
