@@ -255,22 +255,22 @@ Warm exhales. Three-quarters done, review phase, no errors. He goes back to his 
 
 ### Configuration Schema
 
-**Config File:** `.bmad-auto.toml` in project root
+**Config File:** `.bmad-auto.yaml` in project root
 
-```toml
-[workflow]
-epic_path = "docs/epics"
-state_file = ".bmad-auto-state.yaml"
+```yaml
+workflow:
+  epic_path: "docs/epics"
+  state_file: ".bmad-auto-state.yaml"
 
-[agents]
-sm_model = "claude"               # Uses logged-in Anthropic subscription
-dev_model = "glm"                 # Uses GLM via ANTHROPIC_BASE_URL
-reviewer_model = "claude"         # Uses logged-in Anthropic subscription
+agents:
+  sm_model: "claude"               # Uses logged-in Anthropic subscription
+  dev_model: "glm"                 # Uses GLM via ANTHROPIC_BASE_URL
+  reviewer_model: "claude"         # Uses logged-in Anthropic subscription
 
-[git]
-auto_branch = true
-auto_commit = true
-branch_prefix = "epic/"
+git:
+  auto_branch: true
+  auto_commit: true
+  branch_prefix: "epic/"
 ```
 
 **Environment Variables (GLM only):**
@@ -325,7 +325,7 @@ Solve the core problem (manual BMAD orchestration overhead) with minimal feature
 | `status` command | AFK visibility |
 | `resume` command | Recovery from interruption |
 | Headless logging | Workflow transparency |
-| `.bmad-auto.toml` config | Agent model configuration |
+| `.bmad-auto.yaml` config | Agent model configuration |
 | Auto-branch and auto-commit | Hands-off execution |
 
 **Explicitly Out of MVP:**
@@ -421,7 +421,7 @@ Not applicable—personal productivity tool.
 
 ### Configuration
 
-- FR26: User can configure agent model assignments in .bmad-auto.toml
+- FR26: User can configure agent model assignments in .bmad-auto.yaml
 - FR27: System can read GLM credentials from ANTHROPIC_API_KEY environment variable
 - FR28: System can read GLM endpoint from ANTHROPIC_BASE_URL environment variable
 - FR29: User can configure default epic path in config file
@@ -451,7 +451,7 @@ Not applicable—personal productivity tool.
 - NFR8: System must parse BMAD epic files in standard markdown format
 - NFR9: System must produce YAML files readable by standard YAML parsers
 - NFR10: System must integrate with git CLI for branch and commit operations
-- NFR11: System must work with standard TOML parsers for configuration
+- NFR11: System must work with standard YAML parsers for configuration
 
 ### Security
 
