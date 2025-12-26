@@ -53,9 +53,9 @@ workflow:
   state_file: ".bmad-auto-state.yaml"
 
 agents:
-  sm_model: "claude"               # Uses logged-in Anthropic subscription
-  dev_model: "glm"                 # Uses GLM via ANTHROPIC_BASE_URL
-  reviewer_model: "claude"         # Uses logged-in Anthropic subscription
+  sm_model: "opus-4.5"               # Uses logged-in Anthropic subscription
+  dev_model: "glm-4.7"                 # Uses GLM via ANTHROPIC_BASE_URL
+  reviewer_model: "sonnet-4.5"         # Uses logged-in Anthropic subscription
 
 git:
   auto_branch: true
