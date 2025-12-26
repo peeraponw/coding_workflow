@@ -49,10 +49,10 @@ development_status:
 
   epic-2: in-progress
   2-1-epic-file-parser: done
-  2-2-workflow-state-model: review
-  2-3-state-persistence-with-atomic-writes: review
+  2-2-workflow-state-model: done
+  2-3-state-persistence-with-atomic-writes: done
   2-4-resume-detection-recovery: done
-  2-5-graceful-error-recovery: ready-for-dev
+  2-5-graceful-error-recovery: done
   epic-2-retrospective: optional
 
   epic-3: in-progress

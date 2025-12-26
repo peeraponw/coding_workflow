@@ -46,6 +46,20 @@ from bmad_auto.shared.consts import (
     STATUS_PENDING,
 )
 
+# Export error type constants
+from bmad_auto.shared.consts import (
+    ERROR_API,
+    ERROR_RATE_LIMIT,
+    ERROR_UNEXPECTED,
+)
+
+# Export error handling utilities
+from bmad_auto.shared.error_handling import (
+    create_paused_state_with_error,
+    get_error_message_for_type,
+    save_paused_state,
+)
+
 # Export types
 from bmad_auto.shared.types import (
     AgentId,
@@ -96,6 +110,14 @@ __all__ = [
     "STATUS_PAUSED",
     "STATUS_COMPLETED",
     "STATUS_FAILED",
+    # Error types
+    "ERROR_RATE_LIMIT",
+    "ERROR_API",
+    "ERROR_UNEXPECTED",
+    # Error handling
+    "create_paused_state_with_error",
+    "get_error_message_for_type",
+    "save_paused_state",
     # Types
     "StoryId",
     "StoryKey",

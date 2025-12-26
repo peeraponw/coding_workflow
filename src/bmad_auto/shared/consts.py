@@ -27,3 +27,8 @@ STATUS_IN_PROGRESS: Final[str] = "in-progress"
 STATUS_PAUSED: Final[str] = "paused"
 STATUS_COMPLETED: Final[str] = "completed"
 STATUS_FAILED: Final[str] = "failed"
+
+# Error Types
+ERROR_RATE_LIMIT: Final[str] = "rate_limit"
+ERROR_API: Final[str] = "api_error"
+ERROR_UNEXPECTED: Final[str] = "unexpected"

@@ -156,6 +156,14 @@ def test_shared_package_has_expected_all_exports() -> None:
         "STATUS_PAUSED",
         "STATUS_COMPLETED",
         "STATUS_FAILED",
+        # Error types
+        "ERROR_RATE_LIMIT",
+        "ERROR_API",
+        "ERROR_UNEXPECTED",
+        # Error handling
+        "create_paused_state_with_error",
+        "get_error_message_for_type",
+        "save_paused_state",
         # Types
         "StoryId",
         "StoryKey",
