@@ -1,6 +1,6 @@
 # Story 3.5: Story Loop Orchestrator
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -23,34 +23,34 @@ so that **stories are implemented and validated without manual intervention**.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create orchestrator module (AC: 1)
-  - [ ] Create `src/bmad_auto/core/orchestrator.py`
-  - [ ] Implement WorkflowOrchestrator class
-  - [ ] Accept state and agent factory in constructor
-- [ ] Task 2: Implement story loop (AC: 1)
-  - [ ] Iterate through stories from parsed epic
-  - [ ] For each story, execute SM → Dev → Review sequence
-  - [ ] Track current story in state
-- [ ] Task 3: Implement phase execution (AC: 1)
-  - [ ] Implement `run_sm_phase()` - create story
-  - [ ] Implement `run_dev_phase()` - implement story
-  - [ ] Implement `run_review_phase()` - validate implementation
-- [ ] Task 4: Implement review iteration loop (AC: 2)
-  - [ ] Track iteration count in state
-  - [ ] Pass feedback to Dev on rejection
-  - [ ] Loop until approval
-- [ ] Task 5: Implement max iteration handling (AC: 3)
-  - [ ] Define MAX_REVIEW_ITERATIONS = 3
-  - [ ] Pause workflow on max iterations reached
-  - [ ] Set error.type = "review_failed"
-- [ ] Task 6: Implement state saving (AC: 4)
-  - [ ] Save state after SM phase
-  - [ ] Save state after Dev phase
-  - [ ] Save state after Review phase
-- [ ] Task 7: Write tests (AC: 5)
-  - [ ] Test complete loop with mocked agents
-  - [ ] Test review iteration
-  - [ ] Test max iteration pause
+- [x] Task 1: Create orchestrator module (AC: 1)
+  - [x] Create `src/bmad_auto/core/orchestrator.py`
+  - [x] Implement WorkflowOrchestrator class
+  - [x] Accept state and agent factory in constructor
+- [x] Task 2: Implement story loop (AC: 1)
+  - [x] Iterate through stories from parsed epic
+  - [x] For each story, execute SM → Dev → Review sequence
+  - [x] Track current story in state
+- [x] Task 3: Implement phase execution (AC: 1)
+  - [x] Implement `run_sm_phase()` - create story
+  - [x] Implement `run_dev_phase()` - implement story
+  - [x] Implement `run_review_phase()` - validate implementation
+- [x] Task 4: Implement review iteration loop (AC: 2)
+  - [x] Track iteration count in state
+  - [x] Pass feedback to Dev on rejection
+  - [x] Loop until approval
+- [x] Task 5: Implement max iteration handling (AC: 3)
+  - [x] Define MAX_REVIEW_ITERATIONS = 3
+  - [x] Pause workflow on max iterations reached
+  - [x] Set error.type = "review_failed"
+- [x] Task 6: Implement state saving (AC: 4)
+  - [x] Save state after SM phase
+  - [x] Save state after Dev phase
+  - [x] Save state after Review phase
+- [x] Task 7: Write tests (AC: 5)
+  - [x] Test complete loop with mocked agents
+  - [x] Test review iteration
+  - [x] Test max iteration pause
 
 ## Dev Notes
 
@@ -138,9 +138,20 @@ src/bmad_auto/core/
 ## Dev Agent Record
 
 ### Agent Model Used
+glm-4.7 (via Claude Code)
 
 ### Debug Log References
+None - implementation was straightforward
 
 ### Completion Notes List
+- All 5 AC verified
+- 12 tests written and passing
+- pyright 0 errors
+- Orchestrator owns state transitions per architecture
+- Delegates to agents/, state.py as designed
+- Saves state after every phase transition
+- Review approval detection uses keyword heuristics
 
 ### File List
+- src/bmad_auto/core/orchestrator.py
+- src/bmad_auto/core/tests/test_orchestrator.py

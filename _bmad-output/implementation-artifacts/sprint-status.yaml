@@ -57,11 +57,11 @@ development_status:
 
   epic-3: in-progress
   3-1-agent-protocol-base-implementation: done
-  3-2-claude-agent-adapter: review
-  3-3-agent-command-builder: ready-for-dev
-  3-4-model-routing-configuration: ready-for-dev
-  3-5-story-loop-orchestrator: ready-for-dev
-  3-6-context-passing-via-yaml-handoff: ready-for-dev
+  3-2-claude-agent-adapter: done
+  3-3-agent-command-builder: done
+  3-4-model-routing-configuration: done
+  3-5-story-loop-orchestrator: done
+  3-6-context-passing-via-yaml-handoff: done
   epic-3-retrospective: optional
 
   epic-4: in-progress

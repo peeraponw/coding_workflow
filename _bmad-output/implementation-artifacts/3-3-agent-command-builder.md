@@ -1,6 +1,6 @@
 # Story 3.3: Agent Command Builder
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -18,26 +18,26 @@ so that **the orchestrator can construct correct skill commands**.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create prompts module (AC: 1-4)
-  - [ ] Create `src/bmad_auto/agents/prompts.py`
-  - [ ] Define command builder functions
-- [ ] Task 2: Implement build_sm_command (AC: 1)
-  - [ ] Accept epic_content and story_index parameters
-  - [ ] Build skill command with story number
-  - [ ] Include context as needed
-- [ ] Task 3: Implement build_dev_command (AC: 2)
-  - [ ] Accept story_content parameter
-  - [ ] Build skill command for implementation
-  - [ ] Reference story file or content
-- [ ] Task 4: Implement build_reviewer_command (AC: 3)
-  - [ ] Accept story_content and implementation_diff
-  - [ ] Build code-review workflow command
-  - [ ] Include review context
-- [ ] Task 5: Write tests (AC: 5)
-  - [ ] Test SM command format
-  - [ ] Test Dev command format
-  - [ ] Test Reviewer command format
-  - [ ] Test context inclusion
+- [x] Task 1: Create prompts module (AC: 1-4)
+  - [x] Create `src/bmad_auto/agents/prompts.py`
+  - [x] Define command builder functions
+- [x] Task 2: Implement build_sm_command (AC: 1)
+  - [x] Accept epic_content and story_index parameters
+  - [x] Build skill command with story number
+  - [x] Include context as needed
+- [x] Task 3: Implement build_dev_command (AC: 2)
+  - [x] Accept story_content parameter
+  - [x] Build skill command for implementation
+  - [x] Reference story file or content
+- [x] Task 4: Implement build_reviewer_command (AC: 3)
+  - [x] Accept story_content and implementation_diff
+  - [x] Build code-review workflow command
+  - [x] Include review context
+- [x] Task 5: Write tests (AC: 5)
+  - [x] Test SM command format
+  - [x] Test Dev command format
+  - [x] Test Reviewer command format
+  - [x] Test context inclusion
 
 ## Dev Notes
 
@@ -96,9 +96,19 @@ src/bmad_auto/agents/
 ## Dev Agent Record
 
 ### Agent Model Used
+glm-4.7 (via Claude Code)
 
 ### Debug Log References
+None - implementation was straightforward
 
 ### Completion Notes List
+- All 5 AC verified
+- 8 tests written and passing
+- pyright 0 errors
+- Commands use bmad skill format exclusively
+- No prompt pollution - pure skill commands
 
 ### File List
+- src/bmad_auto/agents/prompts.py
+- src/bmad_auto/agents/__init__.py (updated exports)
+- src/bmad_auto/agents/tests/test_prompts.py

@@ -1,6 +1,6 @@
 # Story 3.4: Model Routing Configuration
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -18,28 +18,28 @@ so that **I get quality gates from Claude while saving costs on implementation**
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Extend config for model routing (AC: 1-2)
-  - [ ] Ensure agents section parsed from config
-  - [ ] Support "claude" and "glm" model values
-  - [ ] Load GLM credentials from environment
-- [ ] Task 2: Create agent factory (AC: 1)
-  - [ ] Implement `create_agent(role: AgentRole, config: Config) -> AgentProtocol`
-  - [ ] Route based on config.agents.{role}_model
-  - [ ] Return appropriate agent instance
-- [ ] Task 3: Implement GLM agent variant (AC: 2)
-  - [ ] Create ClaudeAgent with GLM endpoint configuration
-  - [ ] Use ANTHROPIC_BASE_URL for API endpoint
-  - [ ] Use ANTHROPIC_API_KEY for authentication
-- [ ] Task 4: Implement validation (AC: 3)
-  - [ ] Validate model values are "claude" or "glm"
-  - [ ] Validate GLM credentials available when needed
-  - [ ] Raise ConfigError with helpful message
-- [ ] Task 5: Write tests (AC: 4-5)
-  - [ ] Test routing to Claude for SM
-  - [ ] Test routing to GLM for Dev
-  - [ ] Test routing to Claude for Reviewer
-  - [ ] Test invalid model config
-  - [ ] Verify no credential logging
+- [x] Task 1: Extend config for model routing (AC: 1-2)
+  - [x] Ensure agents section parsed from config
+  - [x] Support "claude" and "glm" model values
+  - [x] Load GLM credentials from environment
+- [x] Task 2: Create agent factory (AC: 1)
+  - [x] Implement `create_agent(role: AgentRole, config: Config) -> AgentProtocol`
+  - [x] Route based on config.agents.{role}_model
+  - [x] Return appropriate agent instance
+- [x] Task 3: Implement GLM agent variant (AC: 2)
+  - [x] Create ClaudeAgent with GLM endpoint configuration
+  - [x] Use ANTHROPIC_BASE_URL for API endpoint
+  - [x] Use ANTHROPIC_API_KEY for authentication
+- [x] Task 4: Implement validation (AC: 3)
+  - [x] Validate model values are "claude" or "glm"
+  - [x] Validate GLM credentials available when needed
+  - [x] Raise ConfigError with helpful message
+- [x] Task 5: Write tests (AC: 4-5)
+  - [x] Test routing to Claude for SM
+  - [x] Test routing to GLM for Dev
+  - [x] Test routing to Claude for Reviewer
+  - [x] Test invalid model config
+  - [x] Verify no credential logging
 
 ## Dev Notes
 
@@ -103,9 +103,20 @@ src/bmad_auto/agents/
 ## Dev Agent Record
 
 ### Agent Model Used
+glm-4.7 (via Claude Code)
 
 ### Debug Log References
+None - implementation was straightforward
 
 ### Completion Notes List
+- All 5 AC verified
+- 12 tests written and passing
+- pyright 0 errors
+- Config already had agents section from prior epic
+- Factory pattern cleanly separates routing logic
+- Credentials never logged (NFR14 verified)
 
 ### File List
+- src/bmad_auto/agents/factory.py
+- src/bmad_auto/agents/__init__.py (updated exports)
+- src/bmad_auto/agents/tests/test_factory.py

@@ -1,6 +1,6 @@
 # Story 3.6: Context Passing via YAML Handoff
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -19,33 +19,33 @@ so that **each agent has the information it needs without prompt pollution**.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create handoff module (AC: 1-4)
-  - [ ] Create handoff file management utilities
-  - [ ] Define handoff directory: `.bmad-auto/handoffs/`
-  - [ ] Implement file creation with proper naming
-- [ ] Task 2: Implement SM → Dev handoff (AC: 1)
-  - [ ] Create `sm_to_dev_handoff.yaml`
-  - [ ] Include story content and acceptance criteria
-  - [ ] Include any context from SM agent output
-- [ ] Task 3: Implement Dev → Reviewer handoff (AC: 2)
-  - [ ] Create `dev_to_reviewer_handoff.yaml`
-  - [ ] Include original story content
-  - [ ] Include implementation summary
-  - [ ] Include files changed list
-  - [ ] Include git diff reference
-- [ ] Task 4: Implement Reviewer → Dev handoff (AC: 3)
-  - [ ] Create `reviewer_to_dev_handoff.yaml`
-  - [ ] Include review feedback
-  - [ ] Include specific issues list
-  - [ ] Include previous iteration context
-- [ ] Task 5: Ensure human-readability (AC: 5)
-  - [ ] Use clear YAML formatting
-  - [ ] Add comments for context
-  - [ ] Use readable key names
-- [ ] Task 6: Write tests (AC: 6)
-  - [ ] Test handoff file creation
-  - [ ] Test file content structure
-  - [ ] Test directory creation
+- [x] Task 1: Create handoff module (AC: 1-4)
+  - [x] Create handoff file management utilities
+  - [x] Define handoff directory: `.bmad-auto/handoffs/`
+  - [x] Implement file creation with proper naming
+- [x] Task 2: Implement SM → Dev handoff (AC: 1)
+  - [x] Create `sm_to_dev_handoff.yaml`
+  - [x] Include story content and acceptance criteria
+  - [x] Include any context from SM agent output
+- [x] Task 3: Implement Dev → Reviewer handoff (AC: 2)
+  - [x] Create `dev_to_reviewer_handoff.yaml`
+  - [x] Include original story content
+  - [x] Include implementation summary
+  - [x] Include files changed list
+  - [x] Include git diff reference
+- [x] Task 4: Implement Reviewer → Dev handoff (AC: 3)
+  - [x] Create `reviewer_to_dev_handoff.yaml`
+  - [x] Include review feedback
+  - [x] Include specific issues list
+  - [x] Include previous iteration context
+- [x] Task 5: Ensure human-readability (AC: 5)
+  - [x] Use clear YAML formatting
+  - [x] Add comments for context
+  - [x] Use readable key names
+- [x] Task 6: Write tests (AC: 6)
+  - [x] Test handoff file creation
+  - [x] Test file content structure
+  - [x] Test directory creation
 
 ## Dev Notes
 
@@ -148,9 +148,19 @@ src/bmad_auto/core/
 ## Dev Agent Record
 
 ### Agent Model Used
+glm-4.7 (via Claude Code)
 
 ### Debug Log References
+None - implementation was straightforward
 
 ### Completion Notes List
+- All 6 AC verified
+- 14 tests written and passing
+- pyright 0 errors
+- Handoff files are human-readable YAML with comments
+- Stored in `.bmad-auto/handoffs/{story_id}/`
+- Cleanup function removes handoffs after story completion
 
 ### File List
+- src/bmad_auto/core/handoff.py
+- src/bmad_auto/core/tests/test_handoff.py
