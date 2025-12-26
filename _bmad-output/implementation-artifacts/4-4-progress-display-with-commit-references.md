@@ -1,6 +1,6 @@
 # Story 4.4: Progress Display with Commit References
 
-Status: ready-for-dev
+Status: complete
 
 ## Story
 
@@ -38,29 +38,33 @@ so that **I can verify what's been done and review commits**.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Implement completed stories display (AC: 1)
-  - [ ] Read completed stories from state
-  - [ ] Format with checkmark and commit hash
-  - [ ] Use short commit hash format (7 chars)
-- [ ] Task 2: Implement current story display (AC: 2)
-  - [ ] Show story title
-  - [ ] Show current phase
-  - [ ] Show iteration count
-  - [ ] Show started time
-  - [ ] Calculate and show duration
-- [ ] Task 3: Implement completion summary (AC: 3)
-  - [ ] Detect completed status
-  - [ ] Show total stories and commits
-  - [ ] Show branch name
-  - [ ] Calculate total duration
-- [ ] Task 4: Format commit hashes (AC: 4)
-  - [ ] Truncate to 7 characters
-  - [ ] Handle missing commit gracefully
-- [ ] Task 5: Write tests (AC: 5)
-  - [ ] Test completed stories format
-  - [ ] Test current story format
-  - [ ] Test completion summary
-  - [ ] Test commit hash formatting
+- [x] Task 1: Implement completed stories display (AC: 1)
+  - [x] Read completed stories from state
+  - [x] Format with checkmark and commit hash
+  - [x] Use short commit hash format (7 chars)
+- [x] Task 2: Implement current story display (AC: 2)
+  - [x] Show story title
+  - [x] Show current phase
+  - [x] Show iteration count
+  - [x] Show started time
+  - [x] Calculate and show duration
+- [x] Task 3: Implement completion summary (AC: 3)
+  - [x] Detect completed status
+  - [x] Show total stories and commits
+  - [x] Show branch name
+  - [x] Calculate total duration
+- [x] Task 4: Format commit hashes (AC: 4)
+  - [x] Truncate to 7 characters
+  - [x] Handle missing commit gracefully
+- [x] Task 5: Write tests (AC: 5)
+  - [x] Test completed stories format
+  - [x] Test current story format
+  - [x] Test completion summary
+  - [x] Test commit hash formatting
+
+### Review Follow-ups (AI)
+
+- [ ] [AI-Review][LOW] Verify test directories have __init__.py files for pytest discovery [src/bmad_auto/core/tests/]
 
 ## Dev Notes
 
@@ -129,9 +133,22 @@ src/bmad_auto/
 ## Dev Agent Record
 
 ### Agent Model Used
+claude-opus-4-5-20251101
 
 ### Debug Log References
+None - implementation was already covered by Story 4.1 display.py module.
 
 ### Completion Notes List
+- Progress display functions already implemented in display.py from Story 4.1
+- Added additional tests for commit hash formatting (7 chars)
+- Added tests for missing commit handling (shows "pending")
+- All acceptance criteria met:
+  - AC1: Completed stories display with commit references (short hash format)
+  - AC2: Current story shows title, phase, iteration, started time
+  - AC3: Completion summary shows total stories, commits, branch, duration
+  - AC4: Commit hashes truncated to 7 characters
+  - AC5: Progress display formatting tested
 
 ### File List
+- `src/bmad_auto/core/display.py` (already existed from 4.1)
+- `src/bmad_auto/core/tests/test_display.py` (modified - added more tests)

@@ -100,11 +100,44 @@ def run(epic: str = typer.Option(..., "--epic", help="Path to epic file")) -> No
 def status() -> None:
     """Show current workflow status.
 
-    Stub for now - full implementation in Epic 4.
+    Reads state file without locking (non-blocking).
     """
     try:
-        typer.echo("status command (stub - full implementation in Epic 4)")
+        state_path = get_state_path()
+
+        # Check if state file exists
+        if not state_path.exists():
+            from bmad_auto.core.display import display_no_workflow
+
+            display_no_workflow()
+            raise typer.Exit(EXIT_SUCCESS)
+
+        # Load state (non-blocking read)
+        from bmad_auto.core.state import load
+        from bmad_auto.core.display import (
+            display_status,
+            display_paused_status,
+            display_completion_summary,
+        )
+
+        state = load(state_path)
+
+        # Handle different statuses
+        if state.workflow.status == STATUS_PAUSED:
+            display_paused_status(state)
+            raise typer.Exit(EXIT_SUCCESS)
+
+        if state.workflow.status == STATUS_COMPLETED:
+            display_completion_summary(state)
+            raise typer.Exit(EXIT_SUCCESS)
+
+        # Default: show full status (in_progress, pending, etc.)
+        display_status(state)
         raise typer.Exit(EXIT_SUCCESS)
+
+    except StateCorruptionError as exc:
+        typer.echo(f"[red]State file error: {exc}[/red]", err=True)
+        raise typer.Exit(EXIT_ERROR)
     except ConfigError as exc:
         typer.echo(f"Configuration error: {exc}", err=True)
         raise typer.Exit(EXIT_CONFIG_ERROR)

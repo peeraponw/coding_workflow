@@ -31,10 +31,12 @@ def test_run_command_accepts_epic_argument() -> None:
 
 
 def test_status_command_executes() -> None:
-    """Test that status command executes (stub for now)."""
+    """Test that status command executes with no workflow state."""
     result = runner.invoke(app, ["status"])
-    # Stub message should be present
-    assert result.exit_code == 0
+    # Should show no active workflow message
+    assert result.exit_code == EXIT_SUCCESS
+    output = result.stdout.lower()
+    assert "no active workflow" in output or "no workflow" in output
 
 
 def test_resume_command_executes() -> None:
@@ -185,28 +187,48 @@ def test_run_command_exception_path_coverage() -> None:
 def test_status_command_exception_path_coverage() -> None:
     """Test exception handler paths in status command for coverage."""
     import bmad_auto.main as main_module
+    from pathlib import Path
+    import tempfile
 
-    # Test general exception path (status command is simple)
-    def mock_echo_raises_exception(*args, **kwargs):
-        if not kwargs.get("err"):
-            raise RuntimeError("Test error")
+    # Test with a valid state file that triggers an error during display
+    from bmad_auto.core.state import WorkflowState, save
 
-    with patch("typer.echo", side_effect=mock_echo_raises_exception):
-        result = runner.invoke(app, ["status"])
+    with tempfile.TemporaryDirectory() as tmpdir:
+        state_path = Path(tmpdir) / ".bmad-auto-state.yaml"
+        state = WorkflowState.new(
+            epic_path="docs/epics/epic-001.md",
+            story_count=3,
+            branch="epic/epic-001",
+        )
+        save(state, state_path)
 
-    # Should get error exit code
-    assert result.exit_code == EXIT_ERROR
+        # Mock display_status to raise an exception
+        def mock_display_raises(*args, **kwargs):
+            raise RuntimeError("Test display error")
 
-    # Test ConfigError path
-    def mock_echo_raises_config(*args, **kwargs):
-        if not kwargs.get("err"):
+        with patch("bmad_auto.main.get_state_path", return_value=state_path):
+            with patch("bmad_auto.core.display.display_status", side_effect=mock_display_raises):
+                result = runner.invoke(app, ["status"])
+
+        # Should get error exit code
+        assert result.exit_code == EXIT_ERROR
+
+    # Test ConfigError path - force load to raise ConfigError
+    with tempfile.TemporaryDirectory() as tmpdir:
+        state_path = Path(tmpdir) / ".bmad-auto-state.yaml"
+        # Create empty file so load() gets called
+        state_path.write_text("workflow:\n  epic_path: test\n  status: pending\n  branch: main\nstories:\n  total: 1\n  current_index: 0\n  completed: []\ncurrent_story:\n  id: test\n  phase: sm\n  iteration: 1\n  started_at: '2025-01-01T00:00:00+00:00'\nerror:\n  type: null\n  message: null\n  phase: null\n")
+
+        def mock_load_raises_config(*args):
+            from bmad_auto.shared.exceptions import ConfigError
             raise ConfigError("Test config error")
 
-    with patch("typer.echo", side_effect=mock_echo_raises_config):
-        result = runner.invoke(app, ["status"])
+        with patch("bmad_auto.main.get_state_path", return_value=state_path):
+            with patch("bmad_auto.core.state.load", side_effect=mock_load_raises_config):
+                result = runner.invoke(app, ["status"])
 
-    # Should get config error exit code
-    assert result.exit_code == EXIT_CONFIG_ERROR
+        # Should get config error exit code
+        assert result.exit_code == EXIT_CONFIG_ERROR
 
 
 def test_resume_command_exception_path_coverage() -> None:
