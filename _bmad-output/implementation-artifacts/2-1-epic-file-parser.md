@@ -1,6 +1,6 @@
 # Story 2.1: Epic File Parser
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -17,29 +17,29 @@ so that **stories can be extracted and executed sequentially**.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create epic parser module (AC: 1)
-  - [ ] Create parser in appropriate location (consider core/ or features/)
-  - [ ] Define Epic dataclass with title, description, stories list
-  - [ ] Define Story dataclass with id, title, content
-- [ ] Task 2: Implement markdown parsing (AC: 1)
-  - [ ] Parse `# Epic:` header for title
-  - [ ] Parse description between epic header and first story
-  - [ ] Parse `# Story N:` or `## Story N.M:` patterns
-  - [ ] Extract story content including acceptance criteria
-  - [ ] Return story count for progress tracking
-- [ ] Task 3: Implement error handling (AC: 2)
-  - [ ] Raise descriptive error if no epic header found
-  - [ ] Raise descriptive error if no stories found
-  - [ ] Include line numbers in error messages
-- [ ] Task 4: Handle edge cases (AC: 3)
-  - [ ] Handle empty story content gracefully
-  - [ ] Handle missing description
-  - [ ] Handle various markdown heading styles
-- [ ] Task 5: Write comprehensive tests (AC: 4)
-  - [ ] Test valid epic parsing
-  - [ ] Test malformed epic (no header)
-  - [ ] Test malformed epic (no stories)
-  - [ ] Test edge cases
+- [x] Task 1: Create epic parser module (AC: 1)
+  - [x] Create parser in appropriate location (consider core/ or features/)
+  - [x] Define Epic dataclass with title, description, stories list
+  - [x] Define Story dataclass with id, title, content
+- [x] Task 2: Implement markdown parsing (AC: 1)
+  - [x] Parse `# Epic:` header for title
+  - [x] Parse description between epic header and first story
+  - [x] Parse `# Story N:` or `## Story N.M:` patterns
+  - [x] Extract story content including acceptance criteria
+  - [x] Return story count for progress tracking
+- [x] Task 3: Implement error handling (AC: 2)
+  - [x] Raise descriptive error if no epic header found
+  - [x] Raise descriptive error if no stories found
+  - [x] Include line numbers in error messages
+- [x] Task 4: Handle edge cases (AC: 3)
+  - [x] Handle empty story content gracefully
+  - [x] Handle missing description
+  - [x] Handle various markdown heading styles
+- [x] Task 5: Write comprehensive tests (AC: 4)
+  - [x] Test valid epic parsing
+  - [x] Test malformed epic (no header)
+  - [x] Test malformed epic (no stories)
+  - [x] Test edge cases
 
 ## Dev Notes
 
@@ -110,8 +110,22 @@ src/bmad_auto/core/
 
 ### Agent Model Used
 
+claude-opus-4-5-20251101
+
 ### Debug Log References
+
+None - implementation completed without issues.
 
 ### Completion Notes List
 
+- Implemented `parse_epic()` pure function following TDD red-green-refactor cycle
+- Created dataclasses `Story` and `Epic` with frozen immutability
+- Used verbose regex with `re.VERBOSE` for maintainable pattern matching
+- ParseError includes line numbers for debugging
+- All 9 tests pass (valid, malformed, edge cases)
+- Full test suite (94 tests) passes with no regressions
+
 ### File List
+
+- `src/bmad_auto/core/parser.py` (new) - Epic parser module with dataclasses and parse_epic function
+- `src/bmad_auto/core/tests/test_parser.py` (new) - Comprehensive test suite with fixtures
