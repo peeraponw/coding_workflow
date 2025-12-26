@@ -1,6 +1,5 @@
 """Tests for agent command builders."""
 
-import pytest
 
 from bmad_auto.agents.prompts import (
     build_sm_command,

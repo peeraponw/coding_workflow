@@ -4,8 +4,11 @@ Orchestrates the SM → Dev → Review loop for epic execution.
 Owns workflow state transitions and delegates to agents for execution.
 """
 
+import re
 from dataclasses import dataclass, replace
 from pathlib import Path
+
+import typer
 
 from bmad_auto.agents.base import AgentProtocol
 from bmad_auto.agents.prompts import (
@@ -13,7 +16,9 @@ from bmad_auto.agents.prompts import (
     build_reviewer_command,
     build_sm_command,
 )
+from bmad_auto.core.config import UserConfig
 from bmad_auto.core.state import WorkflowState, save
+from bmad_auto.features.git_integration import GitHandler
 from bmad_auto.shared.consts import (
     PHASE_DEV,
     PHASE_REVIEW,
@@ -37,6 +42,63 @@ class OrchestratorConfig:
     reviewer_model: str
     working_dir: str
     state_file: Path
+    git_config: UserConfig  # For git.auto_branch, git.branch_prefix
+
+
+def derive_branch_name(epic_path: str, prefix: str) -> str:
+    """Derive git branch name from epic file path.
+
+    Args:
+        epic_path: Path to epic file (e.g., "docs/epics/epic-001.md")
+        prefix: Branch prefix from config (e.g., "epic/", "feature/")
+
+    Returns:
+        Sanitized branch name (e.g., "epic/epic-001")
+    """
+    # Get filename without extension
+    filename = Path(epic_path).stem  # "epic-001"
+
+    # Sanitize for git branch naming
+    # Replace spaces and invalid chars with hyphens
+    safe_name = re.sub(r"[~^:?*\[\]\\ .]+", "-", filename)
+    # Remove double dots (invalid in git branch names)
+    safe_name = safe_name.replace("..", "")
+    # Remove leading/trailing hyphens
+    safe_name = safe_name.strip("-")
+    # Replace multiple hyphens with single
+    safe_name = re.sub(r"-+", "-", safe_name)
+
+    # Apply prefix
+    if prefix and not prefix.endswith("/"):
+        prefix = f"{prefix}/"
+
+    return f"{prefix}{safe_name}"
+
+
+def build_commit_message(epic_path: str, story_id: str, summary: str) -> str:
+    """Build semantic commit message for story completion.
+
+    Args:
+        epic_path: Path to epic file (e.g., "epics/epic-001.md")
+        story_id: Story identifier (e.g., "story-1")
+        summary: Implementation summary
+
+    Returns:
+        Formatted commit message
+    """
+    # Extract epic name from path
+    epic_name = Path(epic_path).stem  # "epic-001"
+
+    # Build title: feat(epic-XXX): Story N - Title
+    title = f"feat({epic_name}): {story_id}"
+
+    # Build body with summary and metadata
+    body = f"""{summary}
+
+Story: {epic_path}/{story_id}
+Reviewed-by: bmad-auto"""
+
+    return f"{title}\n\n{body}"
 
 
 class WorkflowOrchestrator:
@@ -68,6 +130,7 @@ class WorkflowOrchestrator:
         self.sm_agent = sm_agent
         self.dev_agent = dev_agent
         self.reviewer_agent = reviewer_agent
+        self.git = GitHandler(Path(config.working_dir))
 
     async def run_epic(
         self, state: WorkflowState, story_ids: list[str]
@@ -81,6 +144,28 @@ class WorkflowOrchestrator:
         Returns:
             Final workflow state after all stories complete or error
         """
+        # Create feature branch if configured
+        if self.config.git_config.git.auto_branch:
+            branch_name = derive_branch_name(
+                state.workflow.epic_path, self.config.git_config.git.branch_prefix
+            )
+
+            if self.git.branch_exists(branch_name):
+                # Branch exists - ask user to confirm using existing branch
+                typer.echo(f"[yellow]Warning:[/yellow] Branch '{branch_name}' already exists.")
+                if not typer.confirm(f"Use existing branch '{branch_name}'?", default=False):
+                    state = self._set_workflow_status(state, STATUS_FAILED)
+                    return self._save_state(state)
+                self.git.checkout_branch(branch_name)
+            else:
+                self.git.create_branch(branch_name)
+
+            # Update state with branch name
+            state = replace(
+                state,
+                workflow=replace(state.workflow, branch=branch_name),
+            )
+
         # Mark workflow as in progress
         state = self._set_workflow_status(state, STATUS_IN_PROGRESS)
         state = self._save_state(state)
@@ -93,8 +178,8 @@ class WorkflowOrchestrator:
             state = self._save_state(state)
 
             try:
-                state = await self._run_story(state, story_id)
-                state = self._mark_story_completed(state, story_id)
+                state, commit_hash = await self._run_story(state, story_id)
+                state = self._mark_story_completed(state, story_id, commit_hash)
                 state = self._save_state(state)
             except Exception as e:
                 return self._handle_error(state, str(e), PHASE_DEV)
@@ -105,7 +190,7 @@ class WorkflowOrchestrator:
 
     async def _run_story(
         self, state: WorkflowState, story_id: str
-    ) -> WorkflowState:
+    ) -> tuple[WorkflowState, str | None]:
         """Run a single story through SM → Dev → Review loop.
 
         Args:
@@ -113,10 +198,12 @@ class WorkflowOrchestrator:
             story_id: ID of the story to run
 
         Returns:
-            Updated workflow state
+            Tuple of (updated_workflow_state, commit_hash or None)
         """
         # SM phase
         state = await self._run_sm_phase(state, story_id)
+
+        commit_hash = None
 
         # Dev → Review loop
         for iteration in range(1, MAX_REVIEW_ITERATIONS + 1):
@@ -137,10 +224,14 @@ class WorkflowOrchestrator:
             # Run review and check if approved
             approved, state = await self._run_review_phase(state, story_id)
             if approved:
-                return state
+                # Commit changes if auto-commit is enabled
+                commit_hash, state = self._commit_story(
+                    state, story_id, impl_summary="Implementation completed"
+                )
+                return state, commit_hash
 
         # Max iterations reached - pause workflow
-        return self._pause_with_review_error(state)
+        return self._pause_with_review_error(state), None
 
     async def _run_sm_phase(
         self, state: WorkflowState, story_id: str
@@ -236,6 +327,59 @@ class WorkflowOrchestrator:
         # Default to approve if no clear rejection indicators
         return True
 
+    def _commit_story(
+        self, state: WorkflowState, story_id: str, impl_summary: str
+    ) -> tuple[str | None, WorkflowState]:
+        """Commit story changes after review approval.
+
+        Args:
+            state: Current workflow state
+            story_id: ID of the story
+            impl_summary: Implementation summary from dev agent
+
+        Returns:
+            Tuple of (commit_hash or None, updated_state)
+        """
+        from bmad_auto.shared.logging import get_logger
+        from bmad_auto.features.git_integration import GitError
+
+        logger = get_logger(__name__)
+
+        if not self.config.git_config.git.auto_commit:
+            logger.info("Auto-commit disabled, skipping commit")
+            return None, state
+
+        try:
+            # Stage all changes
+            self.git.stage_all()
+
+            # Check if there are changes to commit
+            if not self.git.has_staged_changes():
+                logger.warning("No changes to commit for story", extra={"story_id": story_id})
+                return None, state
+
+            # Build commit message
+            message = build_commit_message(
+                epic_path=state.workflow.epic_path,
+                story_id=story_id,
+                summary=impl_summary,
+            )
+
+            # Commit and get hash
+            commit_hash = self.git.commit(message)
+            logger.info(
+                "Committed story",
+                extra={"story_id": story_id, "commit_hash": commit_hash},
+            )
+            return commit_hash, state
+        except GitError as e:
+            logger.error(
+                "Failed to commit story",
+                extra={"story_id": story_id, "error": str(e)},
+            )
+            # Don't fail the workflow, just log the error and continue
+            return None, state
+
     def _pause_with_review_error(self, state: WorkflowState) -> WorkflowState:
         """Pause workflow due to max review iterations reached.
 
@@ -308,22 +452,24 @@ class WorkflowOrchestrator:
         )
 
     def _mark_story_completed(
-        self, state: WorkflowState, story_id: str
+        self, state: WorkflowState, story_id: str, commit_hash: str | None = None
     ) -> WorkflowState:
         """Mark a story as completed.
 
         Args:
             state: Current workflow state
             story_id: ID of the completed story
+            commit_hash: Git commit hash (optional if auto-commit disabled)
 
         Returns:
             Updated workflow state
         """
-        # Add to completed list (placeholder commit for now)
-        # TODO: Get actual commit from git module
         from bmad_auto.core.state import CompletedStory
 
-        completed_story = CompletedStory(story_id=story_id, commit="pending-commit")
+        # Use commit hash if available, otherwise use placeholder
+        commit = commit_hash or "no-commit"
+
+        completed_story = CompletedStory(story_id=story_id, commit=commit)
 
         return replace(
             state,

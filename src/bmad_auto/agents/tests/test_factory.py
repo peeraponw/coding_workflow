@@ -1,6 +1,5 @@
 """Tests for agent factory and model routing."""
 
-import os
 import pytest
 
 from bmad_auto.agents.base import AgentRole

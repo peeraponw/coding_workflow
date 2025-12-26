@@ -278,7 +278,6 @@ def test_serialization_round_trip() -> None:
 
 def test_atomic_write_cleans_up_temp_file(tmp_path) -> None:
     """Test atomic write cleans up temp file on success."""
-    from pathlib import Path
 
     from bmad_auto.core.state import save
 
@@ -304,7 +303,6 @@ def test_atomic_write_cleans_up_temp_file_on_failure(tmp_path) -> None:
     from unittest.mock import patch
 
     from bmad_auto.core.state import save
-    from bmad_auto.shared.exceptions import StateCorruptionError
 
     state_path = tmp_path / ".bmad-auto-state.yaml"
     temp_path = state_path.with_suffix(".tmp")
@@ -329,7 +327,6 @@ def test_atomic_write_cleans_up_temp_file_on_failure(tmp_path) -> None:
 
 def test_atomic_write_replaces_existing_file(tmp_path) -> None:
     """Test atomic write correctly replaces existing file."""
-    from pathlib import Path
 
     from bmad_auto.core.state import load, save
 
@@ -367,7 +364,6 @@ def test_atomic_write_replaces_existing_file(tmp_path) -> None:
 
 def test_load_detects_malformed_yaml(tmp_path) -> None:
     """Test load() detects malformed YAML."""
-    from pathlib import Path
 
     from bmad_auto.core.state import load
     from bmad_auto.shared.exceptions import StateCorruptionError
@@ -383,7 +379,6 @@ def test_load_detects_malformed_yaml(tmp_path) -> None:
 
 def test_load_detects_missing_required_sections(tmp_path) -> None:
     """Test load() detects missing required sections."""
-    from pathlib import Path
 
     from bmad_auto.core.state import load
     from bmad_auto.shared.exceptions import StateCorruptionError
@@ -415,7 +410,6 @@ error:
 
 def test_load_detects_missing_workflow_fields(tmp_path) -> None:
     """Test load() detects missing workflow fields."""
-    from pathlib import Path
 
     from bmad_auto.core.state import load
     from bmad_auto.shared.exceptions import StateCorruptionError
@@ -452,7 +446,6 @@ error:
 
 def test_load_detects_missing_stories_fields(tmp_path) -> None:
     """Test load() detects missing stories fields."""
-    from pathlib import Path
 
     from bmad_auto.core.state import load
     from bmad_auto.shared.exceptions import StateCorruptionError
@@ -489,7 +482,6 @@ error:
 
 def test_load_detects_missing_current_story_fields(tmp_path) -> None:
     """Test load() detects missing current_story fields."""
-    from pathlib import Path
 
     from bmad_auto.core.state import load
     from bmad_auto.shared.exceptions import StateCorruptionError
@@ -526,7 +518,6 @@ error:
 
 def test_load_detects_invalid_datetime_format(tmp_path) -> None:
     """Test load() detects invalid datetime format."""
-    from pathlib import Path
 
     from bmad_auto.core.state import load
     from bmad_auto.shared.exceptions import StateCorruptionError
@@ -562,7 +553,6 @@ error:
 
 def test_load_detects_file_not_found(tmp_path) -> None:
     """Test load() raises StateCorruptionError for missing file."""
-    from pathlib import Path
 
     from bmad_auto.core.state import load
     from bmad_auto.shared.exceptions import StateCorruptionError
@@ -577,7 +567,6 @@ def test_load_detects_file_not_found(tmp_path) -> None:
 
 def test_load_state_corruption_error_has_recovery_message(tmp_path) -> None:
     """Test StateCorruptionError provides helpful recovery message."""
-    from pathlib import Path
 
     from bmad_auto.core.state import load
     from bmad_auto.shared.exceptions import StateCorruptionError
@@ -618,7 +607,6 @@ def test_completed_story_dataclass() -> None:
 
 def test_save_state_creates_yaml_file(tmp_path) -> None:
     """Test save() creates a YAML file with state data."""
-    from pathlib import Path
 
     from bmad_auto.core.state import save
 
@@ -637,11 +625,10 @@ def test_save_state_creates_yaml_file(tmp_path) -> None:
 
 def test_save_state_creates_valid_yaml(tmp_path) -> None:
     """Test save() creates valid YAML that can be loaded."""
-    from pathlib import Path
 
     import yaml
 
-    from bmad_auto.core.state import load, save
+    from bmad_auto.core.state import save
 
     state_path = tmp_path / ".bmad-auto-state.yaml"
     state = WorkflowState.new(
@@ -664,7 +651,6 @@ def test_save_state_creates_valid_yaml(tmp_path) -> None:
 
 def test_load_state_reconstructs_workflow_state(tmp_path) -> None:
     """Test load() reconstructs WorkflowState accurately."""
-    from pathlib import Path
 
     from bmad_auto.core.state import load, save
 
@@ -687,7 +673,6 @@ def test_load_state_reconstructs_workflow_state(tmp_path) -> None:
 
 def test_save_load_round_trip_preserves_all_data(tmp_path) -> None:
     """Test save() -> load() round trip preserves all state data."""
-    from pathlib import Path
 
     from bmad_auto.core.state import load, save
 

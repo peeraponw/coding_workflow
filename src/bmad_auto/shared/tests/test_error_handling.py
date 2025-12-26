@@ -36,14 +36,8 @@ class TestCreatePausedStateWithError:
 
     def test_creates_paused_state_with_rate_limit_error(self) -> None:
         """Test creating paused state with rate limit error."""
-        from datetime import datetime, timezone
 
         from bmad_auto.core.state import (
-            CompletedStory,
-            CurrentStorySection,
-            ErrorSection,
-            StoriesSection,
-            WorkflowSection,
             WorkflowState,
         )
 

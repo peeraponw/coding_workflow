@@ -1,6 +1,6 @@
 # Story 4.4: Progress Display with Commit References
 
-Status: complete
+Status: done
 
 ## Story
 

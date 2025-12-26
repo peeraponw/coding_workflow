@@ -186,7 +186,6 @@ def test_run_command_exception_path_coverage() -> None:
 
 def test_status_command_exception_path_coverage() -> None:
     """Test exception handler paths in status command for coverage."""
-    import bmad_auto.main as main_module
     from pathlib import Path
     import tempfile
 
@@ -288,7 +287,6 @@ def test_resume_command_exception_path_coverage() -> None:
 
 def test_resume_from_in_progress_status(tmp_path) -> None:
     """Test resume command with in_progress status loads state and displays info."""
-    from pathlib import Path
 
     from bmad_auto.core.state import WorkflowState, save
     from bmad_auto.shared.consts import STATUS_IN_PROGRESS
@@ -327,7 +325,6 @@ def test_resume_from_in_progress_status(tmp_path) -> None:
 
 def test_resume_from_paused_status(tmp_path) -> None:
     """Test resume command with paused status loads state and displays info."""
-    from pathlib import Path
 
     from bmad_auto.core.state import WorkflowState, save
     from bmad_auto.shared.consts import STATUS_PAUSED
@@ -363,7 +360,6 @@ def test_resume_from_paused_status(tmp_path) -> None:
 
 def test_resume_with_completed_workflow(tmp_path) -> None:
     """Test resume command with completed status informs user."""
-    from pathlib import Path
 
     from bmad_auto.core.state import WorkflowState, save
     from bmad_auto.shared.consts import STATUS_COMPLETED
@@ -400,7 +396,6 @@ def test_resume_with_completed_workflow(tmp_path) -> None:
 
 def test_resume_with_no_state_file(tmp_path) -> None:
     """Test resume command with no state file shows clear error."""
-    from pathlib import Path
 
     # Mock get_state_path to return non-existent file
     state_path = tmp_path / ".bmad-auto-state.yaml"
@@ -416,7 +411,6 @@ def test_resume_with_no_state_file(tmp_path) -> None:
 
 def test_run_command_conflict_detection(tmp_path) -> None:
     """Test run command detects in-progress workflow for same epic."""
-    from pathlib import Path
 
     from bmad_auto.core.state import WorkflowState, save
     from bmad_auto.shared.consts import STATUS_IN_PROGRESS
@@ -454,7 +448,6 @@ def test_run_command_conflict_detection(tmp_path) -> None:
 
 def test_run_command_different_epic_no_warning(tmp_path) -> None:
     """Test run command with different epic doesn't warn (different workflow)."""
-    from pathlib import Path
 
     from bmad_auto.core.state import WorkflowState, save
     from bmad_auto.shared.consts import STATUS_IN_PROGRESS
@@ -492,7 +485,6 @@ def test_run_command_different_epic_no_warning(tmp_path) -> None:
 
 def test_resume_restores_exact_position(tmp_path) -> None:
     """Test that resume restores exact story, phase, and iteration."""
-    from pathlib import Path
     from datetime import datetime, timezone
 
     from bmad_auto.core.state import (

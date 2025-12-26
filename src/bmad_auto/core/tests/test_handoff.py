@@ -1,13 +1,11 @@
 """Tests for handoff file management."""
 
-from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
 import yaml
 
 from bmad_auto.core.handoff import (
-    HANDOFF_DIR,
     SmToDevHandoff,
     DevToReviewerHandoff,
     ReviewerToDevHandoff,

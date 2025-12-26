@@ -1,6 +1,6 @@
 # Story 4.1: Status Command Implementation
 
-Status: complete
+Status: done
 
 ## Story
 

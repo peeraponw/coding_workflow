@@ -1,6 +1,6 @@
 # Story 4.3: Agent Handoff Logging
 
-Status: complete
+Status: done
 
 ## Story
 

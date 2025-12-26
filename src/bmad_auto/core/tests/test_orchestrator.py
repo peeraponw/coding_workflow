@@ -1,11 +1,11 @@
 """Tests for workflow orchestrator."""
 
-from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
 
-from bmad_auto.agents.base import AgentProtocol, AgentResult, AgentRole
+from bmad_auto.agents.base import AgentResult
+from bmad_auto.core.config import UserConfig, GitConfig, AgentsConfig, WorkflowConfig
 from bmad_auto.core.orchestrator import (
     MAX_REVIEW_ITERATIONS,
     OrchestratorConfig,
@@ -13,14 +13,10 @@ from bmad_auto.core.orchestrator import (
 )
 from bmad_auto.core.state import WorkflowState
 from bmad_auto.shared.consts import (
-    PHASE_DEV,
-    PHASE_REVIEW,
-    PHASE_SM,
     STATUS_COMPLETED,
-    STATUS_IN_PROGRESS,
     STATUS_PAUSED,
-    STATUS_PENDING,
 )
+from bmad_auto.core.orchestrator import derive_branch_name
 
 
 class MockAgent:
@@ -42,14 +38,30 @@ def temp_state_file(tmp_path: Path) -> Path:
 
 
 @pytest.fixture
-def orchestrator_config(temp_state_file: Path) -> OrchestratorConfig:
+def orchestrator_config(temp_state_file: Path, tmp_path: Path) -> OrchestratorConfig:
     """Create orchestrator configuration for testing."""
+    # Create a minimal UserConfig for git settings
+    git_config = UserConfig(
+        workflow=WorkflowConfig(epic_path="docs/epics", state_file=".bmad-auto/state.yaml"),
+        agents=AgentsConfig(
+            sm_model="claude",
+            dev_model="glm",
+            reviewer_model="claude",
+        ),
+        git=GitConfig(
+            auto_branch=False,  # Disable auto branch for most tests
+            auto_commit=True,
+            branch_prefix="epic/",
+        ),
+    )
+
     return OrchestratorConfig(
         sm_model="claude",
         dev_model="glm",
         reviewer_model="claude",
-        working_dir="/project",
+        working_dir=str(tmp_path),  # Use real temp path for git operations
         state_file=temp_state_file,
+        git_config=git_config,
     )
 
 
@@ -152,7 +164,7 @@ class TestStoryLoop:
             epic_path="epic.md", story_count=1, branch="feat/epic-1"
         )
 
-        result_state = await orchestrator._run_story(state, "story-1")
+        result_state, _ = await orchestrator._run_story(state, "story-1")
 
         assert len(sm_agent.calls) == 1
         assert "/bmad:bmm:agents:sm" in sm_agent.calls[0]
@@ -177,7 +189,7 @@ class TestStoryLoop:
             epic_path="epic.md", story_count=1, branch="feat/epic-1"
         )
 
-        result_state = await orchestrator._run_story(state, "story-1")
+        result_state, _ = await orchestrator._run_story(state, "story-1")
 
         assert len(dev_agent.calls) == 1
         assert len(reviewer_agent.calls) == 1
@@ -206,7 +218,7 @@ class TestReviewIterationLoop:
             epic_path="epic.md", story_count=1, branch="feat/epic-1"
         )
 
-        result_state = await orchestrator._run_story(state, "story-1")
+        result_state, _ = await orchestrator._run_story(state, "story-1")
 
         # Should only run once (approved on first iteration)
         assert len(dev_agent.calls) == 1
@@ -230,7 +242,7 @@ class TestReviewIterationLoop:
             epic_path="epic.md", story_count=1, branch="feat/epic-1"
         )
 
-        result_state = await orchestrator._run_story(state, "story-1")
+        result_state, _ = await orchestrator._run_story(state, "story-1")
 
         # Should run MAX_REVIEW_ITERATIONS times
         assert len(dev_agent.calls) == MAX_REVIEW_ITERATIONS
@@ -258,11 +270,12 @@ class TestMaxIterationHandling:
             epic_path="epic.md", story_count=1, branch="feat/epic-1"
         )
 
-        result_state = await orchestrator._run_story(state, "story-1")
+        result_state, _ = await orchestrator._run_story(state, "story-1")
 
         assert result_state.workflow.status == STATUS_PAUSED
         assert result_state.error.type == "review_failed"
-        assert "Maximum review iterations" in result_state.error.message
+        error_msg = result_state.error.message or ""
+        assert "Maximum review iterations" in error_msg
 
 
 class TestReviewApprovalDetection:
@@ -318,10 +331,11 @@ class TestErrorHandling:
             epic_path="epic.md", story_count=1, branch="feat/epic-1"
         )
 
-        result_state = await orchestrator._run_story(state, "story-1")
+        result_state, _ = await orchestrator._run_story(state, "story-1")
 
         assert result_state.workflow.status == "failed"
-        assert "SM agent error" in result_state.error.message
+        error_msg = result_state.error.message or ""
+        assert "SM agent error" in error_msg
 
     @pytest.mark.asyncio
     async def test_dev_phase_failure_sets_error_state(
@@ -348,4 +362,47 @@ class TestErrorHandling:
         result_state = await orchestrator._run_dev_phase(state, "story-1")
 
         assert result_state.workflow.status == "failed"
-        assert "Dev agent error" in result_state.error.message
+        error_msg = result_state.error.message or ""
+        assert "Dev agent error" in error_msg
+
+
+class TestBranchNaming:
+    """Test branch name derivation from epic paths."""
+
+    @pytest.mark.parametrize(
+        "prefix,epic,expected",
+        [
+            ("feature/", "epic-001.md", "feature/epic-001"),
+            ("epic/", "epic-001.md", "epic/epic-001"),
+            ("", "epic-001.md", "epic-001"),
+            ("feat/", "docs/epics/my-epic-file.md", "feat/my-epic-file"),
+            ("", "epic with spaces.md", "epic-with-spaces"),
+            ("user/", "Epic_With_Underscores.md", "user/Epic_With_Underscores"),
+            ("", "epic-001", "epic-001"),  # No extension
+            ("hotfix/", "emergency-fix-123.md", "hotfix/emergency-fix-123"),
+        ],
+    )
+    def test_branch_naming_variations(self, prefix: str, epic: str, expected: str) -> None:
+        """Should handle various epic paths and prefixes."""
+        result = derive_branch_name(epic, prefix)
+        assert result == expected
+
+    def test_branch_naming_sanitization(self) -> None:
+        """Should sanitize invalid characters for git branch names."""
+        # Test special characters
+        assert derive_branch_name("epic~test.md", "") == "epic-test"
+        assert derive_branch_name("epic^test.md", "") == "epic-test"
+        assert derive_branch_name("epic:test.md", "") == "epic-test"
+        assert derive_branch_name("epic?test.md", "") == "epic-test"
+        assert derive_branch_name("epic*test.md", "") == "epic-test"
+        assert derive_branch_name("epic[test.md", "") == "epic-test"
+        assert derive_branch_name("epic\\test.md", "") == "epic-test"
+
+    def test_branch_naming_edge_cases(self) -> None:
+        """Should handle edge cases in naming."""
+        # Multiple consecutive hyphens
+        assert derive_branch_name("epic--test.md", "") == "epic-test"
+        # Leading/trailing hyphens
+        assert derive_branch_name("-epic-test-.md", "") == "epic-test"
+        # Multiple special characters
+        assert derive_branch_name("epic~^test.md", "") == "epic-test"

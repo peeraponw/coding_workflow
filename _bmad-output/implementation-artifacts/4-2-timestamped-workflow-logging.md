@@ -1,6 +1,6 @@
 # Story 4.2: Timestamped Workflow Logging
 
-Status: complete
+Status: done
 
 ## Story
 
