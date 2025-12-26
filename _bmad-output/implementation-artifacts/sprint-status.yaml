@@ -1,0 +1,79 @@
+# generated: 2025-12-26
+# project: bmad-auto
+# project_key: bmad-auto
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2025-12-26
+project: bmad-auto
+project_key: bmad-auto
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+
+development_status:
+  epic-1: in-progress
+  1-1-shared-module-setup: ready-for-dev
+  1-2-logging-infrastructure: ready-for-dev
+  1-3-configuration-loading: ready-for-dev
+  1-4-cli-entry-point-with-commands: ready-for-dev
+  epic-1-retrospective: optional
+
+  epic-2: in-progress
+  2-1-epic-file-parser: ready-for-dev
+  2-2-workflow-state-model: ready-for-dev
+  2-3-state-persistence-with-atomic-writes: ready-for-dev
+  2-4-resume-detection-recovery: ready-for-dev
+  2-5-graceful-error-recovery: ready-for-dev
+  epic-2-retrospective: optional
+
+  epic-3: in-progress
+  3-1-agent-protocol-base-implementation: ready-for-dev
+  3-2-claude-agent-adapter: ready-for-dev
+  3-3-agent-command-builder: ready-for-dev
+  3-4-model-routing-configuration: ready-for-dev
+  3-5-story-loop-orchestrator: ready-for-dev
+  3-6-context-passing-via-yaml-handoff: ready-for-dev
+  epic-3-retrospective: optional
+
+  epic-4: in-progress
+  4-1-status-command-implementation: ready-for-dev
+  4-2-timestamped-workflow-logging: ready-for-dev
+  4-3-agent-handoff-logging: ready-for-dev
+  4-4-progress-display-with-commit-references: ready-for-dev
+  epic-4-retrospective: optional
+
+  epic-5: in-progress
+  5-1-git-handler-module: ready-for-dev
+  5-2-feature-branch-creation: ready-for-dev
+  5-3-auto-commit-after-review-approval: ready-for-dev
+  5-4-branch-naming-configuration: ready-for-dev
+  epic-5-retrospective: optional
