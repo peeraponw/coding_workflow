@@ -1,6 +1,6 @@
 # Story 1.2: Logging Infrastructure
 
-Status: review
+Status: done
 
 ## Story
 
@@ -36,6 +36,13 @@ so that **logs are machine-parseable and user output is readable**.
   - [x] Test logger creation
   - [x] Test structured logging with context
   - [x] Test console output formatting
+
+### Review Follow-ups (AI)
+
+- [x] [AI-Review][MEDIUM] Move `from datetime import datetime` to module level [src/bmad_auto/shared/logging.py:32]
+- [x] [AI-Review][LOW] Add `Final[str]` to color constants for consistency with consts.py [src/bmad_auto/shared/logging.py:18-20]
+- [x] [AI-Review][LOW] Improve test_logger_has_timestamp_processor to verify processor adds timestamp [src/bmad_auto/shared/tests/test_logging.py:38-42]
+- [x] [AI-Review][LOW] Add test verifying JSONRenderer produces valid JSON output [src/bmad_auto/shared/tests/test_logging.py]
 
 ## Dev Notes
 

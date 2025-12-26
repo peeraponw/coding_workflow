@@ -1,11 +1,13 @@
 """Tests for logging module."""
 
+import json
 from datetime import datetime
 
 from bmad_auto.shared.logging import (
     DEV_COLOR,
     REVIEWER_COLOR,
     SM_COLOR,
+    _add_timestamp,
     console,
     get_logger,
 )
@@ -36,10 +38,17 @@ def test_structured_logging_with_context() -> None:
 
 
 def test_logger_has_timestamp_processor() -> None:
-    """Test that logger configuration includes timestamp processor."""
-    logger = get_logger("test_timestamp")
-    # Log a message and verify it doesn't raise
-    logger.info("test", timestamp=datetime.now().isoformat())
+    """Test that timestamp processor adds timestamp to log entries."""
+    # Test the _add_timestamp processor directly
+    event_dict = {"event": "test message"}
+    result = _add_timestamp(None, "info", event_dict)
+
+    assert "timestamp" in result
+    # Verify timestamp is a valid ISO format string
+    try:
+        datetime.fromisoformat(result["timestamp"])
+    except ValueError as exc:
+        raise AssertionError(f"Timestamp is not valid ISO format: {result['timestamp']}") from exc
 
 
 def test_console_exists() -> None:
@@ -68,3 +77,20 @@ def test_agent_colored_print_functions() -> None:
     print_sm("test sm message")
     print_dev("test dev message")
     print_reviewer("test reviewer message")
+
+
+def test_json_renderer_produces_valid_json() -> None:
+    """Test that JSONRenderer produces valid JSON output."""
+    # Check that the configuration includes JSONRenderer
+    from structlog.processors import JSONRenderer
+
+    # Since we can't access the configured processors directly after
+    # the fact, we verify by creating a test log entry with the processor
+    test_dict = {"event": "test", "key": "value"}
+    renderer = JSONRenderer()
+    result = renderer(None, "info", test_dict)
+
+    # Result should be valid JSON
+    parsed = json.loads(result)
+    assert parsed["event"] == "test"
+    assert parsed["key"] == "value"

@@ -9,15 +9,18 @@ Per project-context.md:
 - NEVER use print() for output
 """
 
+from datetime import datetime
+
 from rich.console import Console
 
 import structlog
 from structlog.typing import EventDict
+from typing import Final
 
 # Color constants for agent phases
-SM_COLOR = "blue"
-DEV_COLOR = "green"
-REVIEWER_COLOR = "yellow"
+SM_COLOR: Final[str] = "blue"
+DEV_COLOR: Final[str] = "green"
+REVIEWER_COLOR: Final[str] = "yellow"
 
 # Shared console instance for user-facing output
 console = Console()
@@ -29,8 +32,6 @@ def _add_timestamp(
     event_dict: EventDict,
 ) -> EventDict:
     """Add ISO timestamp to log entries."""
-    from datetime import datetime
-
     event_dict["timestamp"] = datetime.now().isoformat()
     return event_dict
 
